@@ -1,4 +1,4 @@
-# KOLOG Backend
+# KOLOG BE
 
 ## CONTRIBUTION CONVENTION
 ### 기본 브랜치 구조
