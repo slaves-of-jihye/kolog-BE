@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class UseProfileUpdateCase implements UserProfileUpdateUseCase {
+public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
     private final UserRepository userRepository;
 
     @Override
