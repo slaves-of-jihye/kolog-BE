@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.provider;
+package com.kogo.kologbackend.adapter.auth.provider;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

@@ -1,5 +1,6 @@
 package com.kogo.kologbackend.domain.user;
 
+import com.kogo.kologbackend.domain.user.element.UserInfo;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,6 +16,10 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Embedded
+    @Setter
+    private UserInfo userInfo;
 
     @Builder
     public User(String email) {

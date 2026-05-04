@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.provider;
+package com.kogo.kologbackend.adapter.auth.provider;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

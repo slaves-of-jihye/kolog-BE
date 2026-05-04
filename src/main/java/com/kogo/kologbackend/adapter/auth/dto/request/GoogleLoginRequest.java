@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.dto.request;
+package com.kogo.kologbackend.adapter.auth.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

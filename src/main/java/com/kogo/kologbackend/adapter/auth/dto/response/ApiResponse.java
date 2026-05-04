@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.dto.response;
+package com.kogo.kologbackend.adapter.auth.dto.response;
 
 public record ApiResponse<T>(
         int status,

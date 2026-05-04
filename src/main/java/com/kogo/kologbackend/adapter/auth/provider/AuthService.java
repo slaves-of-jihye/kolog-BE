@@ -1,6 +1,6 @@
-package com.kogo.kologbackend.adapter.provider;
+package com.kogo.kologbackend.adapter.auth.provider;
 
-import com.kogo.kologbackend.adapter.dto.response.AuthResponse;
+import com.kogo.kologbackend.adapter.auth.dto.response.AuthResponse;
 import com.kogo.kologbackend.application.user.external.UserRepository;
 import com.kogo.kologbackend.domain.user.User;
 import org.springframework.stereotype.Service;

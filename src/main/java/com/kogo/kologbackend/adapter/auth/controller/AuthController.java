@@ -1,9 +1,9 @@
-package com.kogo.kologbackend.adapter.controller;
+package com.kogo.kologbackend.adapter.auth.controller;
 
-import com.kogo.kologbackend.adapter.dto.request.GoogleLoginRequest;
-import com.kogo.kologbackend.adapter.dto.response.ApiResponse;
-import com.kogo.kologbackend.adapter.dto.response.AuthResponse;
-import com.kogo.kologbackend.adapter.provider.AuthService;
+import com.kogo.kologbackend.adapter.auth.dto.request.GoogleLoginRequest;
+import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
+import com.kogo.kologbackend.adapter.auth.dto.response.AuthResponse;
+import com.kogo.kologbackend.adapter.auth.provider.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
