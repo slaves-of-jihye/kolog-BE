@@ -37,4 +37,17 @@ public class JwtProvider {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    public Long getUserIdFromToken(String token) {
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
+
+        String subject = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+
+        return Long.parseLong(subject);
+    }
 }
