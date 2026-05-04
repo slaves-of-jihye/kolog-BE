@@ -19,7 +19,7 @@ public class User {
 
     @Embedded
     @Setter
-    private UserInfo userInfo;
+    private UserInfo userInfo = new UserInfo();
 
     @Builder
     public User(String email) {

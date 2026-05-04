@@ -6,7 +6,7 @@ import lombok.*;
 @Embeddable
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 public class UserInfo {
     private String nickname;
