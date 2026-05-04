@@ -25,4 +25,9 @@ public class User {
     public User(String email) {
         this.email = email;
     }
+
+    public void updateProfile(String nickname, String profileImage) {
+        this.userInfo.setNickname(nickname);
+        this.userInfo.setProfileImage(profileImage);
+    }
 }
