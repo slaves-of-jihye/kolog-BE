@@ -2,9 +2,12 @@ package com.kogo.kologbackend.adapter.log;
 
 import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
 import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
+import com.kogo.kologbackend.application.log.dto.request.LogCaptionUpdateRequest;
 import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
+import com.kogo.kologbackend.application.log.dto.response.LogCaptionUpdateResponse;
 import com.kogo.kologbackend.application.log.dto.response.LogCreateResponse;
 import com.kogo.kologbackend.application.log.dto.response.LogGetListResponse;
+import com.kogo.kologbackend.application.log.internal.LogCaptionUpdateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetListUseCase;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import java.util.List;
 public class LogController {
     private final LogGetListUseCase logGetListUseCase;
     private final LogCreateUseCase logCreateUseCase;
+    private final LogCaptionUpdateUseCase logCaptionUpdateUseCase;
     private final JwtProvider jwtProvider;
 
     @PostMapping(value="/video", consumes = "multipart/form-data")
@@ -47,6 +51,24 @@ public class LogController {
                 200,
                 "조회 성공",
                 list
+        ));
+    }
+
+    @PatchMapping("/{logId}/caption")
+    public ResponseEntity<ApiResponse<LogCaptionUpdateResponse>> updateCaption(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long logId,
+            @RequestBody LogCaptionUpdateRequest logCaptionUpdateRequest
+            ) {
+        String jwt = token.substring(7);
+        Long userId = jwtProvider.getUserIdFromToken(jwt);
+
+        LogCaptionUpdateResponse data = logCaptionUpdateUseCase.updateCaption(logId, logCaptionUpdateRequest);
+
+        return ResponseEntity.ok(new ApiResponse<> (
+                200,
+                "캡션 수정 성공",
+                data
         ));
     }
 }
