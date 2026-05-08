@@ -18,15 +18,9 @@ public class LogGetListCase implements LogGetListUseCase {
 
     private final LogRepository logRepository;
 
-    LocalDate date = LocalDate.now();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/dd");
-
-    String formattedDate = date.format(formatter);
-
     @Override
-    public List<LogGetListResponse> list() {
-
-        List<Log> byDate = logRepository.findByDate(formattedDate);
+    public List<LogGetListResponse> list(String date) {
+        List<Log> byDate = logRepository.findByDate(date);
 
         return byDate.stream()
                 .map(log -> new LogGetListResponse(
