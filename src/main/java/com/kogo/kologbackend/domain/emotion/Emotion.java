@@ -19,7 +19,7 @@ public class Emotion {
     private Long id;
     
     @Column(nullable = false)
-    private int emotionId;
+    private Long emotionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -30,7 +30,7 @@ public class Emotion {
     private Log log;
 
     @Builder
-    public Emotion(int emotionId, User user, Log log) {
+    public Emotion(Long emotionId, User user, Log log) {
         this.emotionId = emotionId;
         this.user = user;
         this.log = log;
