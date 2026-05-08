@@ -21,6 +21,8 @@ public class Log {
     @Column(nullable = false)
     private String videoUrl;
 
+    private String caption;
+
     private String date;
 
     private Integer hour;
@@ -30,10 +32,11 @@ public class Log {
     private User user;
 
     @Builder
-    public Log(String videoUrl, String date, Integer hour, User user) {
+    public Log(String videoUrl, String caption, String date, Integer hour, User user) {
         this.videoUrl = videoUrl;
         this.date = date;
         this.hour = hour;
         this.user = user;
+        this.caption = caption;
     }
 }

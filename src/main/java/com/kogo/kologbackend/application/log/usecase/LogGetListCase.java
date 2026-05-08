@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -22,13 +25,20 @@ public class LogGetListCase implements LogGetListUseCase {
     public List<LogGetListResponse> list(String date) {
         List<Log> byDate = logRepository.findByDate(date);
 
-        return byDate.stream()
+        Map<String, List<Log>> groupedByDate = byDate.stream()
+                .collect(Collectors.groupingBy(Log::getDate));
+        return groupedByDate.values().stream()
+                .map(logsInDate -> {
+                    Collections.shuffle(logsInDate); // 그룹 내 데이터를 무작위로 섞음
+                    return logsInDate.get(0);        // 첫 번째 데이터 추출
+                })
                 .map(log -> new LogGetListResponse(
                         log.getDate(),
                         log.getHour(),
                         log.getUser().getId()
                 ))
-                .toList();
-
+                .toList(); // 결과: 각 날짜당 1개의 랜덤 로그가 담긴 배열
     }
+
+
 }
