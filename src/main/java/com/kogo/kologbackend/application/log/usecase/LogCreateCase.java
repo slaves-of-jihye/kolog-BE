@@ -14,7 +14,7 @@ public class LogCreateCase implements LogCreateUseCase {
     private final LogRepository  logRepository;
 
     @Override
-    public LogCreateResponse logCreate(LogCreateRequest logCreateRequest) {
+    public LogCreateResponse logCreate(Long userId, LogCreateRequest logCreateRequest) {
         return null;
     }
 }

@@ -4,7 +4,7 @@ import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.application.log.dto.response.LogCreateResponse;
 
 public interface LogCreateUseCase{
-    LogCreateResponse logCreate(LogCreateRequest logCreateRequest);
+    LogCreateResponse logCreate(Long userId, LogCreateRequest logCreateRequest);
 
 
 }
