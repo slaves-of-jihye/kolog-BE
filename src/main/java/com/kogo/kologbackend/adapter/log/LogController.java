@@ -49,7 +49,7 @@ public class LogController {
         return ResponseEntity.ok(new ApiResponse<>(200, "조회 성공", list));
     }
 
-    @GetMapping
+    @GetMapping("/hour")
     public ResponseEntity<ApiResponse<List<LogGetByHourResponse>>> LogGetByHour(
             @RequestParam String date,
             @RequestParam Integer hour
