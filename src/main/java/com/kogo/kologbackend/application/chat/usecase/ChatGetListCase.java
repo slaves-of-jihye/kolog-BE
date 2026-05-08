@@ -17,7 +17,7 @@ public class ChatGetListCase implements ChatGetListUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<ChatGetListResponse> getChatList(Long logId) {
-        return chatRepository.findByLogId(logId).stream()
+        return chatRepository.findByLog_LogId(logId).stream()
                 .map(chat -> new ChatGetListResponse(
                         chat.getChatId(),
                         chat.getUser().getId(),
