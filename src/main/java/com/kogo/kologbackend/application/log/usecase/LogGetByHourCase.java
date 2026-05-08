@@ -8,6 +8,7 @@ import com.kogo.kologbackend.domain.log.Log;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class LogGetByHourCase implements LogGetByHourUseCase {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<LogGetByHourResponse> list(String date,Integer hour) {
         List<Log> byDateAndHour = logRepository.findByDateAndHour(date, hour);
 
