@@ -39,4 +39,10 @@ public class Log {
         this.user = user;
         this.caption = caption;
     }
+
+    public void updateCaption(String caption) {
+        if (!caption.isBlank() || caption == null) {
+            this.caption = caption;
+        }
+    }
 }
