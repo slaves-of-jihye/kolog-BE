@@ -21,7 +21,7 @@ public class LogController {
     private final LogCreateUseCase logCreateUseCase;
     private final JwtProvider jwtProvider;
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping(value="/video", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<LogCreateResponse>> createLog(
             @RequestHeader("Authorization") String token,
             @ModelAttribute LogCreateRequest request
