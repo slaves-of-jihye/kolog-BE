@@ -20,8 +20,8 @@ public class ChatCreateCase implements ChatCreateUseCase {
     private final LogRepository logRepository;
 
     @Override
-    public void createChat(ChatCreateRequest chatCreateRequest) {
-        User user = userRepository.findById(chatCreateRequest.userId())
+    public void createChat(Long userId, ChatCreateRequest chatCreateRequest) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
         Log log = logRepository.findById(chatCreateRequest.logId())

@@ -23,34 +23,34 @@ public class VideoController {
 
     @PostMapping("/emotion")
     public ResponseEntity<ApiResponse> emotionCreate(
-            //@RequestHeader("Authorization") String token,
+            @RequestHeader("Authorization") String token,
             @RequestBody EmotionCreateRequest request
     ) {
-        /*String jwt = token.substring(7);
+        String jwt = token.substring(7);
         Long userId = jwtProvider.getUserIdFromToken(jwt);
 
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }*/
+        }
 
-        emotionCreateUseCase.createEmotion(request);
+        emotionCreateUseCase.createEmotion(userId, request);
 
         return ResponseEntity.ok(new ApiResponse<>(200, "이모티콘 표시 성공", request.emotionId()));
     }
 
     @PostMapping("/chat")
     public ResponseEntity<ApiResponse> chatCreate(
-           // @RequestHeader("Authorization") String token,
+            @RequestHeader("Authorization") String token,
             @RequestBody ChatCreateRequest request
             ){
-        //String jwt = token.substring(7);
-        //Long userId = jwtProvider.getUserIdFromToken(jwt);
+        String jwt = token.substring(7);
+        Long userId = jwtProvider.getUserIdFromToken(jwt);
 
-        //if (userId == null) {
-        //    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        //}
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        chatCreateUseCase.createChat(request);
+        chatCreateUseCase.createChat(userId, request);
         return ResponseEntity.ok(new ApiResponse<>(200,"댓글 작성 성공",request.chatContent()));
     }
 }
