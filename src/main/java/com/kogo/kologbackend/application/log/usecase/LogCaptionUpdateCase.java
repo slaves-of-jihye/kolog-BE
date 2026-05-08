@@ -18,7 +18,7 @@ public class LogCaptionUpdateCase implements LogCaptionUpdateUseCase {
 
     @Override
     @Transactional
-    public LogCaptionUpdateResponse updateCaption(Long logId, LogCaptionUpdateRequest logCaptionUpdateRequest) {
+    public LogCaptionUpdateResponse updateCaption(Long logId, Long userId, LogCaptionUpdateRequest logCaptionUpdateRequest) {
         Log log = logRepository.findById(logId)
                 .orElseThrow(() -> new RuntimeException("로그가 존재하지 않습니다."));
 

@@ -63,7 +63,7 @@ public class LogController {
         String jwt = token.substring(7);
         Long userId = jwtProvider.getUserIdFromToken(jwt);
 
-        LogCaptionUpdateResponse data = logCaptionUpdateUseCase.updateCaption(logId, logCaptionUpdateRequest);
+        LogCaptionUpdateResponse data = logCaptionUpdateUseCase.updateCaption(logId, userId, logCaptionUpdateRequest);
 
         return ResponseEntity.ok(new ApiResponse<> (
                 200,
