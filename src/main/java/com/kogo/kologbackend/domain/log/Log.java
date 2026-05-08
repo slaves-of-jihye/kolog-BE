@@ -21,16 +21,19 @@ public class Log {
     @Column(nullable = false)
     private String videoUrl;
 
-    private LocalDateTime takenAt;
+    private String date;
+
+    private Integer hour;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     @Builder
-    public Log(String videoUrl, LocalDateTime takenAt, User user) {
+    public Log(String videoUrl, String date, Integer hour, User user) {
         this.videoUrl = videoUrl;
-        this.takenAt = takenAt;
+        this.date = date;
+        this.hour = hour;
         this.user = user;
     }
 }

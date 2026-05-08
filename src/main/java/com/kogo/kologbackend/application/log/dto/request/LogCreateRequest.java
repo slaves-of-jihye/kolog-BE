@@ -7,5 +7,6 @@ import java.time.LocalDateTime;
 public record LogCreateRequest(
         MultipartFile videoFile,
         String caption,
-        LocalDateTime takenAt
+        String date,
+        Integer hour
 ){}

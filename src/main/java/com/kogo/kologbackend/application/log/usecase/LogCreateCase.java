@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LogCreateCase implements LogCreateUseCase {
 
-    private LogRepository  logRepository;
+    private final LogRepository  logRepository;
 
     @Override
     public LogCreateResponse logCreate(LogCreateRequest logCreateRequest) {
