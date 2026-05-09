@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.auth.Service;
+package com.kogo.kologbackend.adapter.auth.service;
 
 import com.kogo.kologbackend.adapter.auth.dto.request.LoginRequest;
 import com.kogo.kologbackend.adapter.auth.dto.request.SignupRequest;
@@ -43,7 +43,7 @@ public class AuthService {
         User user = userRepository.findByEmail(loginRequest.email())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        if (passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
