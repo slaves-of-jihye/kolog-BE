@@ -25,8 +25,9 @@ public class User {
     private UserInfo userInfo = new UserInfo();
 
     @Builder
-    public User(String email) {
+    public User(String email, String password) {
         this.email = email;
+        this.password = password;
     }
 
     public void updateProfile(String nickname, String profileImage) {
