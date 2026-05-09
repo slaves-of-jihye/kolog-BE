@@ -42,7 +42,7 @@ public class LogCreateCase implements LogCreateUseCase {
                 saveLog.getVideoUrl(),
                 saveLog.getCaption(),
                 saveLog.getHour(),
-                LocalDateTime.now()
+                saveLog.getDate()
         );
     }
 }

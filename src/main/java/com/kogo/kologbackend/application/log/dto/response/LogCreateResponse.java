@@ -8,6 +8,6 @@ public record LogCreateResponse(
     String videoUrl,
     String caption,
     Integer hour,
-    LocalDateTime recordedAt
+    String date
 )
 {}
