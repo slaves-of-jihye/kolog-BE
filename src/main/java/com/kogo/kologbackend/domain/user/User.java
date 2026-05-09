@@ -17,13 +17,17 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String password;
+
     @Embedded
     @Setter
     private UserInfo userInfo = new UserInfo();
 
     @Builder
-    public User(String email) {
+    public User(String email, String password) {
         this.email = email;
+        this.password = password;
     }
 
     public void updateProfile(String nickname, String profileImage) {
