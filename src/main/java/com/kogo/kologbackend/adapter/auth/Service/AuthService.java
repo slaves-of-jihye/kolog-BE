@@ -1,7 +1,9 @@
 package com.kogo.kologbackend.adapter.auth.Service;
 
+import com.kogo.kologbackend.adapter.auth.dto.request.LoginRequest;
 import com.kogo.kologbackend.adapter.auth.dto.request.SignupRequest;
 import com.kogo.kologbackend.adapter.auth.dto.response.AuthResponse;
+import com.kogo.kologbackend.adapter.auth.dto.response.LoginResponse;
 import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
 import com.kogo.kologbackend.application.user.external.UserRepository;
 import com.kogo.kologbackend.domain.user.User;
@@ -35,5 +37,19 @@ public class AuthService {
                 saveUser.getId(),
                 saveUser.getEmail()
         );
+    }
+
+    public LoginResponse login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.email())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        if (passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        String accessToken = jwtProvider.createAccessToken(user.getId());
+        String refreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        return new LoginResponse("Bearer", accessToken, refreshToken);
     }
 }
