@@ -13,4 +13,6 @@ public interface LogRepository extends JpaRepository<Log,Long> {
     List<Log> findByDate(String date);
 
     List<Log> findByDateAndHour(@Param("date") String date, @Param("hour") Integer hour);
+
+    boolean existsByUserIdAndDateAndHour(Long userId, String date, Integer hour);
 }

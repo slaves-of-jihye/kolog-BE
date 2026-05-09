@@ -22,6 +22,10 @@ public class LogCaptionUpdateCase implements LogCaptionUpdateUseCase {
         Log log = logRepository.findById(logId)
                 .orElseThrow(() -> new RuntimeException("로그가 존재하지 않습니다."));
 
+        if (!log.getUser().getId().equals(userId)) {
+            throw new RuntimeException("본인의 로그만 수정할 수 있습니다.");
+        }
+
         log.updateCaption(logCaptionUpdateRequest.caption());
 
         return new LogCaptionUpdateResponse(
