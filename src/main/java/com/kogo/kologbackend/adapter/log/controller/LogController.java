@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.log;
+package com.kogo.kologbackend.adapter.log.controller;
 
 import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
 import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
