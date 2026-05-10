@@ -22,6 +22,10 @@ public class EmotionCreateCase implements EmotionCreateUseCase {
     @Override
     @Transactional
     public void createEmotion(Long userId, EmotionCreateRequest emotionCreateRequest) {
+        if(emotionRepository.existsByLog_LogIdAndUserId(emotionCreateRequest.logId(), userId)) {
+            throw new RuntimeException("이미 해당 로그에 감정표현을 남겼습니다.");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("해당하는 유저가 없습니다."));
 

@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.adapter.auth.Service;
+package com.kogo.kologbackend.adapter.auth.service;
 
 import com.kogo.kologbackend.adapter.auth.dto.request.LoginRequest;
 import com.kogo.kologbackend.adapter.auth.dto.request.SignupRequest;
