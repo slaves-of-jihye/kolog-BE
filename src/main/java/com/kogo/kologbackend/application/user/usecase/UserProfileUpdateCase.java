@@ -26,7 +26,12 @@ public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
             imageUrl = "https://... 나중에 변경할 저장소 url" + profileImage.getOriginalFilename();
         }
 
-        user.updateProfile(nickname, imageUrl);
+        String targetNickname = user.getUserInfo().getNickname();
+        if (nickname != null && !nickname.isBlank()) {
+            targetNickname = nickname;
+        }
+
+        user.updateProfile(targetNickname, imageUrl);
 
         return new UserProfileResponse(
                 user.getId(),
