@@ -23,7 +23,7 @@ public class UserController {
     @PatchMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(
             @RequestHeader("Authorization") String token,
-            @RequestParam("nickname") String nickname,
+            @RequestParam(value="nickname", required = false) String nickname,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage
             ) {
         String jwt = token.substring(7);
