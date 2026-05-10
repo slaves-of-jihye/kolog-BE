@@ -28,6 +28,9 @@ public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
 
         String targetNickname = user.getUserInfo().getNickname();
         if (nickname != null && !nickname.isBlank()) {
+            if (!nickname.equals(targetNickname) && userRepository.existsByNickname(nickname)) {
+                throw new RuntimeException("이미 존재하는 닉네임입니다.");
+            }
             targetNickname = nickname;
         }
 
