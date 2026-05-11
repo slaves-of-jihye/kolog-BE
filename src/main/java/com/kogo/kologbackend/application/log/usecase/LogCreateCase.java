@@ -7,6 +7,7 @@ import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
 import com.kogo.kologbackend.application.user.external.UserRepository;
 import com.kogo.kologbackend.domain.log.Log;
 import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.global.util.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class LogCreateCase implements LogCreateUseCase {
 
     private final LogRepository logRepository;
     private final UserRepository userRepository;
+    private final FileService fileService;
 
     @Override
     public LogCreateResponse logCreate(Long userId, LogCreateRequest logCreateRequest) {
@@ -29,7 +31,7 @@ public class LogCreateCase implements LogCreateUseCase {
             throw new RuntimeException("한 시간에 하나의 로그만 올릴 수 있습니다.");
         }
 
-        String videoUrl = "https:// ... 나중에 추가될 스토리지 주소" + logCreateRequest.videoFile().getOriginalFilename();
+        String videoUrl = fileService.storeFile(logCreateRequest.videoFile());
 
         Log log = Log.builder()
                 .videoUrl(videoUrl)
