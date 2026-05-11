@@ -14,8 +14,8 @@ RUN ./gradlew build -x test
 
 FROM ubuntu/jre:21-24.04_stable AS runtime
 
-WORKDIR /app
+WORKDIR /workspace
 
-COPY --from=builder /workspace/build/libs/kolog-backend-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY --from=builder /workspace/build/libs/kolog-backend-0.0.1-SNAPSHOT.jar /workspace/app.jar
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
