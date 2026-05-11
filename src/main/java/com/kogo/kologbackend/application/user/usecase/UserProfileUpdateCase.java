@@ -4,6 +4,7 @@ import com.kogo.kologbackend.application.user.dto.response.UserProfileResponse;
 import com.kogo.kologbackend.application.user.external.UserRepository;
 import com.kogo.kologbackend.application.user.internal.UserProfileUpdateUseCase;
 import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.global.util.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
     private final UserRepository userRepository;
+    private final FileService fileService;
 
     @Override
     @Transactional
@@ -23,7 +25,7 @@ public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
         String imageUrl = user.getUserInfo().getProfileImage();
         if (profileImage != null && !profileImage.isEmpty()) {
-            imageUrl = "https://... 나중에 변경할 저장소 url" + profileImage.getOriginalFilename();
+            imageUrl = fileService.storeFile(profileImage);
         }
 
         String targetNickname = user.getUserInfo().getNickname();
