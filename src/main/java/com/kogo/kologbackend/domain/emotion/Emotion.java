@@ -19,7 +19,7 @@ public class Emotion {
     private Long id;
     
     @Column(nullable = false)
-    private Long emotionId;
+    private String emotionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
