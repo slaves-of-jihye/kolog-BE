@@ -51,8 +51,8 @@ public class LogController {
 
     @GetMapping("/hour")
     public ResponseEntity<ApiResponse<List<LogGetByHourResponse>>> LogGetByHour(
-            @RequestParam String date,
-            @RequestParam Integer hour
+            @RequestParam(name="date") String date,
+            @RequestParam(name="hour") Integer hour
     ){
         List<LogGetByHourResponse> list = logGetByHourUseCase.list(date, hour);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format("%d시 전체 로그 조회 성공", hour), list));
