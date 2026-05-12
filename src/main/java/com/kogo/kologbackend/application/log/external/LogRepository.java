@@ -1,5 +1,7 @@
 package com.kogo.kologbackend.application.log.external;
 
+import com.kogo.kologbackend.application.log.dto.response.LogGetHourList;
+import com.kogo.kologbackend.application.log.dto.response.LogHourRaw;
 import com.kogo.kologbackend.domain.log.Log;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +17,9 @@ public interface LogRepository extends JpaRepository<Log,Long> {
     List<Log> findByDateAndHour(@Param("date") String date, @Param("hour") Integer hour);
 
     boolean existsByUserIdAndDateAndHour(Long userId, String date, Integer hour);
+
+    @Query("select l.date, l.hour from Log l group by l.date, l.hour order by l.date, l.hour")
+    List<LogHourRaw> findByHour();
 
     @Query("select distinct l.hour from Log l where l.date=:date order by l.hour asc")
     List<Integer> findHourByDate(@Param("date") String date);
