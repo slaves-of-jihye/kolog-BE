@@ -4,14 +4,8 @@ import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
 import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
 import com.kogo.kologbackend.application.log.dto.request.LogCaptionUpdateRequest;
 import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
-import com.kogo.kologbackend.application.log.dto.response.LogCaptionUpdateResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogCreateResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogGetByHourResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogGetListResponse;
-import com.kogo.kologbackend.application.log.internal.LogCaptionUpdateUseCase;
-import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
-import com.kogo.kologbackend.application.log.internal.LogGetByHourUseCase;
-import com.kogo.kologbackend.application.log.internal.LogGetListUseCase;
+import com.kogo.kologbackend.application.log.dto.response.*;
+import com.kogo.kologbackend.application.log.internal.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +21,7 @@ public class LogController {
     private final LogGetByHourUseCase logGetByHourUseCase;
     private final LogCreateUseCase logCreateUseCase;
     private final LogCaptionUpdateUseCase logCaptionUpdateUseCase;
+    private final LogGetHourListUseCase logGetHourListUseCase;
     private final JwtProvider jwtProvider;
 
     @PostMapping(value="/video", consumes = "multipart/form-data")
@@ -69,5 +64,11 @@ public class LogController {
         LogCaptionUpdateResponse data = logCaptionUpdateUseCase.updateCaption(logId, userId, logCaptionUpdateRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(200, "캡션 수정 성공", data));
+    }
+    
+    @GetMapping("/hours")
+    public ResponseEntity<ApiResponse<List<LogGetHourList>>> getHourList(){
+        List<LogGetHourList> hourList = logGetHourListUseCase.getHourList();
+        return ResponseEntity.ok(new ApiResponse<>(200, "시간 목록 조회 성공", hourList));
     }
 }
