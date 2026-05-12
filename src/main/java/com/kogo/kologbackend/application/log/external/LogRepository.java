@@ -20,4 +20,7 @@ public interface LogRepository extends JpaRepository<Log,Long> {
 
     @Query("select l.date, l.hour from Log l group by l.date, l.hour order by l.date, l.hour")
     List<LogHourRaw> findByHour();
+
+    @Query("select distinct l.hour from Log l where l.date=:date order by l.hour asc")
+    List<Integer> findHourByDate(@Param("date") String date);
 }
