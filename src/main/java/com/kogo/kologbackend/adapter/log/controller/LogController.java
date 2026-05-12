@@ -4,10 +4,7 @@ import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
 import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
 import com.kogo.kologbackend.application.log.dto.request.LogCaptionUpdateRequest;
 import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
-import com.kogo.kologbackend.application.log.dto.response.LogCaptionUpdateResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogCreateResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogGetByHourResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogGetListResponse;
+import com.kogo.kologbackend.application.log.dto.response.*;
 import com.kogo.kologbackend.application.log.internal.LogCaptionUpdateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetByHourUseCase;
@@ -50,11 +47,11 @@ public class LogController {
     }
 
     @GetMapping("/hour")
-    public ResponseEntity<ApiResponse<List<LogGetByHourResponse>>> LogGetByHour(
+    public ResponseEntity<ApiResponse<LogGetByHourListResponse>> LogGetByHour(
             @RequestParam(name="date") String date,
             @RequestParam(name="hour") Integer hour
     ){
-        List<LogGetByHourResponse> list = logGetByHourUseCase.list(date, hour);
+        LogGetByHourListResponse list = logGetByHourUseCase.list(date, hour);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format("%d시 전체 로그 조회 성공", hour), list));
     }
 
