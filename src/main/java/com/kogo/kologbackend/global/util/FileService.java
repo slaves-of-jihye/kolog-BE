@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -18,24 +20,35 @@ public class FileService {
     private String serverUrl;
 
     public String storeFile(MultipartFile file) {
-        if (file.isEmpty() || file == null) {
+        if (file == null || file.isEmpty()) {
             return null;
         }
 
-        File directory = new File(uploadDir);
-        if(!directory.exists()) {
-            directory.mkdirs();
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null) {
+            String cleanFilename = Path.of(originalFilename).getFileName().toString();
+            int extensionIndex = cleanFilename.lastIndexOf(".");
+            if (extensionIndex >= 0) {
+                extension = cleanFilename.substring(extensionIndex);
+            }
         }
 
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        File targetFile = new File(uploadDir + fileName);
+        String fileName = UUID.randomUUID() + extension;
+        Path uploadPath = Path.of(uploadDir).toAbsolutePath().normalize();
+        Path targetPath = uploadPath.resolve(fileName).normalize();
+
+        if (!targetPath.startsWith(uploadPath)) {
+            throw new IllegalArgumentException("잘못된 파일명입니다.");
+        }
 
         try {
-            file.transferTo(targetFile);
+            Files.createDirectories(uploadPath);
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException("파일 저장 중 오류 발생", e);
         }
 
-        return serverUrl + "/resources/" + fileName;
+        return serverUrl.replaceAll("/+$", "") + "/resources/" + fileName;
     }
 }

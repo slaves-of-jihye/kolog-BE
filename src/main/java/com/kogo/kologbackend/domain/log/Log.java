@@ -41,7 +41,7 @@ public class Log {
     }
 
     public void updateCaption(String caption) {
-        if (!caption.isBlank() || caption == null) {
+        if (caption != null && !caption.isBlank()) {
             this.caption = caption;
         }
     }

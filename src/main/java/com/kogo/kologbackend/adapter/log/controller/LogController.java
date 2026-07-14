@@ -1,7 +1,6 @@
 package com.kogo.kologbackend.adapter.log.controller;
 
 import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
-import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
 import com.kogo.kologbackend.application.log.dto.request.LogCaptionUpdateRequest;
 import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.application.log.dto.response.LogCaptionUpdateResponse;
@@ -14,6 +13,7 @@ import com.kogo.kologbackend.application.log.internal.LogGetByHourUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetListUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,15 +27,12 @@ public class LogController {
     private final LogGetByHourUseCase logGetByHourUseCase;
     private final LogCreateUseCase logCreateUseCase;
     private final LogCaptionUpdateUseCase logCaptionUpdateUseCase;
-    private final JwtProvider jwtProvider;
 
     @PostMapping(value="/video", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<LogCreateResponse>> createLog(
-            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal Long userId,
             @ModelAttribute LogCreateRequest request
     ) {
-        String jwt = token.substring(7);
-        Long userId = jwtProvider.getUserIdFromToken(jwt);
         LogCreateResponse data = logCreateUseCase.logCreate(userId, request);
 
         return ResponseEntity.ok(new ApiResponse<>(200, "로그 생성 성공", data));
@@ -60,12 +57,10 @@ public class LogController {
 
     @PatchMapping("/{logId}/caption")
     public ResponseEntity<ApiResponse<LogCaptionUpdateResponse>> updateCaption(
-            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long logId,
             @RequestBody LogCaptionUpdateRequest logCaptionUpdateRequest
     ) {
-        String jwt = token.substring(7);
-        Long userId = jwtProvider.getUserIdFromToken(jwt);
         LogCaptionUpdateResponse data = logCaptionUpdateUseCase.updateCaption(logId, userId, logCaptionUpdateRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(200, "캡션 수정 성공", data));
