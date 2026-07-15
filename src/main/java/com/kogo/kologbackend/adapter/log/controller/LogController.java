@@ -5,11 +5,13 @@ import com.kogo.kologbackend.application.log.dto.request.LogCaptionUpdateRequest
 import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.application.log.dto.response.LogCaptionUpdateResponse;
 import com.kogo.kologbackend.application.log.dto.response.LogCreateResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogGetByHourResponse;
+import com.kogo.kologbackend.application.log.dto.response.LogGetByHourListResponse;
+import com.kogo.kologbackend.application.log.dto.response.LogGetHourList;
 import com.kogo.kologbackend.application.log.dto.response.LogGetListResponse;
 import com.kogo.kologbackend.application.log.internal.LogCaptionUpdateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetByHourUseCase;
+import com.kogo.kologbackend.application.log.internal.LogGetHourListUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetListUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +29,14 @@ public class LogController {
     private final LogGetByHourUseCase logGetByHourUseCase;
     private final LogCreateUseCase logCreateUseCase;
     private final LogCaptionUpdateUseCase logCaptionUpdateUseCase;
+    private final LogGetHourListUseCase logGetHourListUseCase;
 
-    @PostMapping(value="/video", consumes = "multipart/form-data")
+    @PostMapping(value = "/video", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<LogCreateResponse>> createLog(
             @AuthenticationPrincipal Long userId,
             @ModelAttribute LogCreateRequest request
     ) {
         LogCreateResponse data = logCreateUseCase.logCreate(userId, request);
-
         return ResponseEntity.ok(new ApiResponse<>(200, "로그 생성 성공", data));
     }
 
@@ -47,11 +49,11 @@ public class LogController {
     }
 
     @GetMapping("/hour")
-    public ResponseEntity<ApiResponse<List<LogGetByHourResponse>>> LogGetByHour(
-            @RequestParam String date,
-            @RequestParam Integer hour
-    ){
-        List<LogGetByHourResponse> list = logGetByHourUseCase.list(date, hour);
+    public ResponseEntity<ApiResponse<LogGetByHourListResponse>> LogGetByHour(
+            @RequestParam(name = "date") String date,
+            @RequestParam(name = "hour") Integer hour
+    ) {
+        LogGetByHourListResponse list = logGetByHourUseCase.list(date, hour);
         return ResponseEntity.ok(new ApiResponse<>(200, String.format("%d시 전체 로그 조회 성공", hour), list));
     }
 
@@ -62,7 +64,12 @@ public class LogController {
             @RequestBody LogCaptionUpdateRequest logCaptionUpdateRequest
     ) {
         LogCaptionUpdateResponse data = logCaptionUpdateUseCase.updateCaption(logId, userId, logCaptionUpdateRequest);
-
         return ResponseEntity.ok(new ApiResponse<>(200, "캡션 수정 성공", data));
+    }
+
+    @GetMapping("/hours")
+    public ResponseEntity<ApiResponse<List<LogGetHourList>>> getHourList() {
+        List<LogGetHourList> hourList = logGetHourListUseCase.getHourList();
+        return ResponseEntity.ok(new ApiResponse<>(200, "시간 목록 조회 성공", hourList));
     }
 }
