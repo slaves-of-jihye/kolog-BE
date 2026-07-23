@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
+    environment {
+        COMPOSE_FILE = 'deploy/docker-compose.yml'
+        ENV_FILE = 'deploy/.env'
+        COMPOSE_PROJECT_NAME = 'kolog'
+    }
+
+    stages {
+        stage('Prepare environment') {
+            steps {
+                withCredentials([string(credentialsId: 'kolog-be-env', variable: 'KOLOG_BE_ENV')]) {
+                    script {
+                        writeFile(file: env.ENV_FILE, text: env.KOLOG_BE_ENV)
+                    }
+                    sh 'chmod 600 "$ENV_FILE"'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans'
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'rm -f "$ENV_FILE"'
+        }
+    }
+}
