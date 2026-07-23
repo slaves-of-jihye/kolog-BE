@@ -15,11 +15,8 @@ pipeline {
     stages {
         stage('Prepare environment') {
             steps {
-                withCredentials([string(credentialsId: 'kolog-be-env', variable: 'KOLOG_BE_ENV')]) {
-                    script {
-                        writeFile(file: env.ENV_FILE, text: env.KOLOG_BE_ENV)
-                    }
-                    sh 'chmod 600 "$ENV_FILE"'
+                withCredentials([file(credentialsId: 'kolog-be-env', variable: 'KOLOG_BE_ENV_FILE')]) {
+                    sh 'cp "$KOLOG_BE_ENV_FILE" "$ENV_FILE" && chmod 600 "$ENV_FILE" && test -s "$ENV_FILE"'
                 }
             }
         }
