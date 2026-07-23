@@ -14,9 +14,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in deploy/.env}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in deploy/.env}
       FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/storage/}
-      FILE_SERVER_URL: ${FILE_SERVER_URL:-http://localhost:8003}
+      FILE_SERVER_URL: ${FILE_SERVER_URL:-http://localhost:8001}
     ports:
-      - "8003:8080"
+      - "8001:8080"
     volumes:
       - kolog-storage:/app/storage
     depends_on:
