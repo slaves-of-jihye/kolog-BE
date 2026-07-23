@@ -9,8 +9,8 @@ services:
     env_file:
       - .env
     environment:
-      DB_URL: ${DB_URL:-jdbc:postgresql://db:5432/kolog}
-      DB_USERNAME: ${DB_USERNAME:-kolog}
+      DB_URL: ${DB_URL:?DB_URL must be set in deploy/.env}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set in deploy/.env}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in deploy/.env}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in deploy/.env}
       FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/storage/}
@@ -19,28 +19,6 @@ services:
       - "8001:8080"
     volumes:
       - kolog-storage:/app/storage
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - kolog-network
-
-  db:
-    image: postgres:16-alpine
-    container_name: kolog-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-kolog}
-      POSTGRES_USER: ${POSTGRES_USER:-kolog}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
-    volumes:
-      - kolog-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
     networks:
       - kolog-network
 
@@ -49,5 +27,4 @@ networks:
     driver: bridge
 
 volumes:
-  kolog-db-data:
   kolog-storage:
