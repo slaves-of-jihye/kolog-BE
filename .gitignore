@@ -39,3 +39,4 @@ out/
 # Security / Credentials
 .env
 *.env
+.DS_Store
