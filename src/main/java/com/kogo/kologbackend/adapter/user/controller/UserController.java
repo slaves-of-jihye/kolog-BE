@@ -11,7 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@RestControllerrm -f .git/index.lock
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 public class UserController {
