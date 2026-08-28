@@ -32,13 +32,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
+        // 토큰이 없으면 익명으로 통과시킨다. permitAll 엔드포인트는 그대로 동작하고,
+        // 인증이 필요한 엔드포인트는 뒤쪽 인가 단계에서 401 로 거절된다.
         if (authorizationHeader == null || authorizationHeader.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
         if (!authorizationHeader.startsWith(BEARER_PREFIX)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Authorization header.");
+            SecurityResponseWriter.write(
+                    response,
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Authorization 헤더 형식이 올바르지 않습니다. 'Bearer {token}' 형태여야 합니다."
+            );
             return;
         }
 
@@ -48,10 +54,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
         } catch (JwtException | IllegalArgumentException e) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
+            SecurityResponseWriter.write(
+                    response,
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "유효하지 않거나 만료된 토큰입니다."
+            );
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 }
