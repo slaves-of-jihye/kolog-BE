@@ -134,11 +134,25 @@ class UserProfileSecurityTest {
     }
 
     @Test
-    @DisplayName("permitAll 인 GET /api/v1/logs 는 토큰 없이도 인증 에러가 나지 않는다")
+    @DisplayName("permitAll 인 GET /api/v1/logs/hours 는 토큰 없이도 200")
     void permitAllEndpointStaysOpen() throws Exception {
+        HttpResponse<String> response = send(HttpRequest.newBuilder(URI.create(BASE_URL + "/api/v1/logs/hours")).GET().build());
+
+        assertEquals(200, response.statusCode(), "permitAll 엔드포인트가 막혔다. body=" + response.body());
+    }
+
+    /**
+     * 핸들러가 없는 경로는 톰캣이 /error 로 ERROR 디스패치하고, 그 디스패치도 시큐리티 체인을
+     * 다시 탄다. /error 가 permitAll 이 아니면 404 가 AuthenticationEntryPoint 의 401 로
+     * 덮여서 나간다. 클라이언트 입장에서는 "URL 오타"가 "토큰 문제"로 보이게 된다.
+     */
+    @Test
+    @DisplayName("없는 경로는 401 이 아니라 404 로 나간다 (/error permitAll 회귀)")
+    void unknownPathReturnsNotFound() throws Exception {
         HttpResponse<String> response = send(HttpRequest.newBuilder(URI.create(BASE_URL + "/api/v1/logs")).GET().build());
 
-        assertNotEquals(401, response.statusCode(), "body=" + response.body());
-        assertNotEquals(403, response.statusCode(), "body=" + response.body());
+        assertNotEquals(401, response.statusCode(), "404 가 401 로 덮였다. body=" + response.body());
+        assertNotEquals(403, response.statusCode(), "404 가 403 으로 덮였다. body=" + response.body());
+        assertEquals(404, response.statusCode(), "body=" + response.body());
     }
 }
