@@ -24,13 +24,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(properties = {
         "server.port=18080",
-        "app.cors.allowed-origins=http://localhost:3000"
+        "app.cors.allowed-origins=http://localhost:3000,https://kolog-nu.vercel.app,https://kolog-nu-*.vercel.app"
 })
 class UserProfileSecurityTest {
 
     private static final String BASE_URL = "http://localhost:18080";
     private static final String PROFILE_URL = BASE_URL + "/api/v1/users/profile";
     private static final String ALLOWED_ORIGIN = "http://localhost:3000";
+    private static final String PROD_ORIGIN = "https://kolog-nu.vercel.app";
+    private static final String PREVIEW_ORIGIN = "https://kolog-nu-git-feat-abc-team.vercel.app";
     private static final String DISALLOWED_ORIGIN = "http://localhost:5173";
 
     private static final HttpClient CLIENT = HttpClient.newBuilder()
@@ -154,5 +156,37 @@ class UserProfileSecurityTest {
         assertNotEquals(401, response.statusCode(), "404 가 401 로 덮였다. body=" + response.body());
         assertNotEquals(403, response.statusCode(), "404 가 403 으로 덮였다. body=" + response.body());
         assertEquals(404, response.statusCode(), "body=" + response.body());
+    }
+    /**
+     * Vercel 프리뷰 배포는 커밋마다 서브도메인이 바뀐다. setAllowedOrigins 로는 매번 막히므로
+     * setAllowedOriginPatterns + 와일드카드로 열어둔다. allowCredentials(true) 와 와일드카드를
+     * 함께 쓰려면 반드시 패턴 API 여야 하고, 이때 스프링은 요청 Origin 을 그대로 에코한다.
+     */
+    @Test
+    @DisplayName("Vercel 프로덕션 Origin 프리플라이트 -> 200 + Origin 에코")
+    void preflightFromVercelProdOrigin() throws Exception {
+        assertPreflightAllowed(PROD_ORIGIN);
+    }
+
+    @Test
+    @DisplayName("Vercel 프리뷰 Origin(와일드카드 매칭) 프리플라이트 -> 200 + Origin 에코")
+    void preflightFromVercelPreviewOrigin() throws Exception {
+        assertPreflightAllowed(PREVIEW_ORIGIN);
+    }
+
+    private void assertPreflightAllowed(String origin) throws Exception {
+        HttpResponse<String> response = send(HttpRequest.newBuilder(URI.create(BASE_URL + "/api/v1/users/signup"))
+                .method("OPTIONS", HttpRequest.BodyPublishers.noBody())
+                .header("Origin", origin)
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "content-type")
+                .build());
+
+        assertEquals(200, response.statusCode(), origin + " 이 막혔다. body=" + response.body());
+        assertEquals(origin,
+                response.headers().firstValue("access-control-allow-origin").orElse(null),
+                "Origin 에코가 안 됐다");
+        assertEquals("true",
+                response.headers().firstValue("access-control-allow-credentials").orElse(null));
     }
 }
