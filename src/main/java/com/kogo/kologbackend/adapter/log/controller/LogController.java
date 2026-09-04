@@ -77,7 +77,7 @@ public class LogController {
     }
 
     @DeleteMapping("/delete")
-    public void deleteLog(@PathVariable Long logId, @AuthenticationPrincipal Long userId) {
+    public ResponseEntity<Void> deleteLog(@PathVariable Long logId, @AuthenticationPrincipal Long userId) {
         logDeleteCase.deleteLog(logId, userId);
     }
 }
