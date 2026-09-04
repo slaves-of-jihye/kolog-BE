@@ -13,7 +13,9 @@ import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetByHourUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetHourListUseCase;
 import com.kogo.kologbackend.application.log.internal.LogGetListUseCase;
+import com.kogo.kologbackend.application.log.usecase.LogDeleteCase;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,7 @@ public class LogController {
     private final LogCreateUseCase logCreateUseCase;
     private final LogCaptionUpdateUseCase logCaptionUpdateUseCase;
     private final LogGetHourListUseCase logGetHourListUseCase;
+    private final LogDeleteCase logDeleteCase;
 
     @PostMapping(value = "/video", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<LogCreateResponse>> createLog(
@@ -71,5 +74,10 @@ public class LogController {
     public ResponseEntity<ApiResponse<List<LogGetHourList>>> getHourList() {
         List<LogGetHourList> hourList = logGetHourListUseCase.getHourList();
         return ResponseEntity.ok(new ApiResponse<>(200, "시간 목록 조회 성공", hourList));
+    }
+
+    @DeleteMapping("/delete")
+    public void deleteLog(@PathVariable Long logId, @AuthenticationPrincipal Long userId) {
+        logDeleteCase.deleteLog(logId, userId);
     }
 }
