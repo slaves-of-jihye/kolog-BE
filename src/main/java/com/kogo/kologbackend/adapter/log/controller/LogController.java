@@ -76,7 +76,7 @@ public class LogController {
         return ResponseEntity.ok(new ApiResponse<>(200, "시간 목록 조회 성공", hourList));
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/{logId}")
     public ResponseEntity<Void> deleteLog(@PathVariable Long logId, @AuthenticationPrincipal Long userId) {
         logDeleteCase.deleteLog(logId, userId);
         return ResponseEntity.noContent().build();
