@@ -4,39 +4,164 @@ pipeline {
     options {
         disableConcurrentBuilds()
         timestamps()
+        skipDefaultCheckout(true)
     }
 
     environment {
         COMPOSE_FILE = 'deploy/docker-compose.yml'
         ENV_FILE = 'deploy/.env'
-        COMPOSE_PROJECT_NAME = 'kolog'
+        COMPOSE_PROJECT_NAME = 'kolog_backend'
+        CONTAINER_NAME = 'kolog_backend'
+        ENV_CREDENTIAL_ID = 'kolog-be-env'
+        STATE_DIR = "${JENKINS_HOME}/kolog-backend-deploy"
+        BUILD_CONTEXT = "${WORKSPACE}"
     }
 
     stages {
-        stage('Prepare environment') {
+        stage('Checkout and identify build') {
             steps {
-                withCredentials([file(credentialsId: 'kolog-be-env', variable: 'KOLOG_BE_ENV_FILE')]) {
-                    sh 'cp "$KOLOG_BE_ENV_FILE" "$ENV_FILE" && chmod 600 "$ENV_FILE" && test -s "$ENV_FILE"'
+                checkout scm
+                script {
+                    env.COMMIT_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = "${env.BUILD_NUMBER}-${env.COMMIT_SHA.take(12)}"
+                    if (!(env.IMAGE_TAG ==~ /[A-Za-z0-9_.-]+/)) {
+                        error('Generated image tag is invalid')
+                    }
+                }
+                sh '''
+                    set -eu
+                    mkdir -p "$STATE_DIR"
+                    chmod 700 "$STATE_DIR"
+                    chmod +x deploy/scripts/verify-deployment.sh
+                '''
+            }
+        }
+
+        stage('Prepare secret environment') {
+            steps {
+                withCredentials([file(credentialsId: env.ENV_CREDENTIAL_ID, variable: 'KOLOG_BE_ENV_FILE')]) {
+                    sh '''
+                        set -eu
+                        install -m 600 "$KOLOG_BE_ENV_FILE" "$ENV_FILE"
+                        test -s "$ENV_FILE"
+                    '''
                 }
             }
         }
 
-        stage('Build') {
+        stage('Validate and build immutable image') {
             steps {
-                sh 'docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build'
+                sh '''
+                    set -eu
+                    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config --quiet
+                    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build --pull
+                    docker image inspect "kolog_backend:$IMAGE_TAG" >/dev/null
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Capture rollback candidate') {
             steps {
-                sh 'docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans'
+                script {
+                    env.ROLLBACK_TAG = ''
+                    def metadata = "${env.STATE_DIR}/last-known-good.env"
+                    def rollbackCompose = "${env.STATE_DIR}/last-known-good-compose.yml"
+                    if (fileExists(metadata) && fileExists(rollbackCompose)) {
+                        def values = [:]
+                        readFile(metadata).readLines().each { line ->
+                            def parts = line.split('=', 2)
+                            if (parts.size() == 2) values[parts[0]] = parts[1]
+                        }
+                        def tag = values['IMAGE_TAG'] ?: ''
+                        if (!(tag ==~ /[A-Za-z0-9_.-]+/)) {
+                            error('Stored rollback image tag is invalid')
+                        }
+                        def expectedImage = "kolog_backend:${tag}"
+                        def currentImage = sh(
+                            script: "docker inspect --format '{{.Config.Image}}' '${env.CONTAINER_NAME}' 2>/dev/null || true",
+                            returnStdout: true
+                        ).trim()
+                        def currentHealth = sh(
+                            script: "docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' '${env.CONTAINER_NAME}' 2>/dev/null || true",
+                            returnStdout: true
+                        ).trim()
+                        if (currentImage == expectedImage && currentHealth == 'healthy') {
+                            env.ROLLBACK_TAG = tag
+                            echo "Rollback candidate captured: ${expectedImage}"
+                        } else {
+                            echo 'No verified running last-known-good version; rollback will be skipped if deployment fails.'
+                        }
+                    } else {
+                        echo 'No last-known-good metadata exists; this is treated as a first deployment.'
+                    }
+                }
+            }
+        }
+
+        stage('Deploy and verify') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            set -eu
+                            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans --no-build
+                            deploy/scripts/verify-deployment.sh "$CONTAINER_NAME" 180
+                        '''
+
+                        sh '''
+                            set -eu
+                            cp "$COMPOSE_FILE" "$STATE_DIR/last-known-good-compose.yml.tmp"
+                            chmod 600 "$STATE_DIR/last-known-good-compose.yml.tmp"
+                            compose_sha="$(sha256sum "$COMPOSE_FILE")"
+                            compose_sha="${compose_sha%% *}"
+                            {
+                                printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG"
+                                printf 'COMMIT_SHA=%s\n' "$COMMIT_SHA"
+                                printf 'COMPOSE_SHA256=%s\n' "$compose_sha"
+                            } > "$STATE_DIR/last-known-good.env.tmp"
+                            chmod 600 "$STATE_DIR/last-known-good.env.tmp"
+                            mv "$STATE_DIR/last-known-good-compose.yml.tmp" "$STATE_DIR/last-known-good-compose.yml"
+                            mv "$STATE_DIR/last-known-good.env.tmp" "$STATE_DIR/last-known-good.env"
+                        '''
+                    } catch (deployError) {
+                        if (env.ROLLBACK_TAG?.trim()) {
+                            echo "Deployment failed; rolling back to kolog_backend:${env.ROLLBACK_TAG}"
+                            int rollbackStatus = sh(
+                                script: '''
+                                    set +e
+                                    IMAGE_TAG="$ROLLBACK_TAG" docker compose \
+                                      --env-file "$ENV_FILE" \
+                                      -f "$STATE_DIR/last-known-good-compose.yml" \
+                                      up -d --remove-orphans --no-build
+                                    up_rc=$?
+                                    if [ "$up_rc" -ne 0 ]; then
+                                        exit "$up_rc"
+                                    fi
+                                    deploy/scripts/verify-deployment.sh "$CONTAINER_NAME" 180
+                                ''',
+                                returnStatus: true
+                            )
+                            if (rollbackStatus == 0) {
+                                echo 'Rollback succeeded and the previous version is healthy.'
+                            } else {
+                                echo "Rollback failed verification (exit ${rollbackStatus})."
+                            }
+                        } else {
+                            echo 'Deployment failed and no verified previous version exists; rollback skipped.'
+                        }
+                        error("Deployment failed: ${deployError.message}")
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            sh 'rm -f "$ENV_FILE"'
+            sh '''
+                rm -f "$ENV_FILE"
+                rm -f "$STATE_DIR"/*.tmp
+            '''
         }
     }
 }
