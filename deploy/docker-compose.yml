@@ -1,12 +1,12 @@
-name: kolog_backend
+name: ${COMPOSE_PROJECT_NAME:?COMPOSE_PROJECT_NAME is required}
 
 services:
   kolog_backend:
     build:
-      context: ${BUILD_CONTEXT:-..}
+      context: ${BUILD_CONTEXT:?BUILD_CONTEXT is required}
       dockerfile: deploy/Dockerfile
-    image: kolog_backend:${IMAGE_TAG:?IMAGE_TAG must be set to an immutable build tag}
-    container_name: kolog_backend
+    image: ${IMAGE_NAME:?IMAGE_NAME is required}:${IMAGE_TAG:?IMAGE_TAG must be set to an immutable build tag}
+    container_name: ${CONTAINER_NAME:?CONTAINER_NAME is required}
     restart: unless-stopped
     env_file:
       - ../.env
@@ -14,13 +14,13 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${APP_PORT:-8001}:8080"
+      - "${APP_PORT:?APP_PORT is required}:8080"
     volumes:
-      - kolog_backend_storage_data:/app/storage
+      - kolog-storage:/app/storage
     networks:
-      - kolog_backend_network
+      - kolog-network
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/api/v1/logs/hours"]
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "${HEALTHCHECK_URL:?HEALTHCHECK_URL is required}"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -48,10 +48,12 @@ services:
       start_period: 10s
 
 networks:
-  kolog_backend_network:
-    name: kolog_backend_network
+  kolog-network:
+    name: ${NETWORK_NAME:?NETWORK_NAME is required}
     driver: bridge
 
 volumes:
   kolog-storage:
+    name: ${STORAGE_VOLUME_NAME:?STORAGE_VOLUME_NAME is required}
   kolog-db-data:
+    name: ${DB_VOLUME_NAME:?DB_VOLUME_NAME is required}

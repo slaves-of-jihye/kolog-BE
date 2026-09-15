@@ -8,9 +8,21 @@ pipeline {
     }
 
     environment {
-        COMPOSE_FILE = 'deploy/docker-compose.yml'
-        ENV_FILE = '.env'
+        COMPOSE_FILE = "${env.WORKSPACE}/deploy/docker-compose.yml"
+        COMPOSE_DIRECTORY = "${env.WORKSPACE}/deploy"
+        BUILD_CONTEXT = "${env.WORKSPACE}"
+        ENV_FILE = "${env.WORKSPACE}/.env"
+        STATE_DIR = "${env.WORKSPACE}@state"
+        ENV_CREDENTIAL_ID = 'kolog-be-env'
         COMPOSE_PROJECT_NAME = 'kolog'
+        IMAGE_NAME = 'kolog_backend'
+        CONTAINER_NAME = 'kolog_backend'
+        APP_PORT = '8001'
+        NETWORK_NAME = 'kolog_kolog-network'
+        STORAGE_VOLUME_NAME = 'kolog_kolog-storage'
+        DB_VOLUME_NAME = 'kolog_kolog-db-data'
+        DEPLOY_TIMEOUT = '180'
+        HEALTHCHECK_URL = 'http://127.0.0.1:8080/api/v1/logs/hours'
     }
 
     stages {
@@ -26,6 +38,8 @@ pipeline {
                 }
                 sh '''
                     set -eu
+                    : "${STATE_DIR:?STATE_DIR is required}"
+                    test "$STATE_DIR" != /
                     mkdir -p "$STATE_DIR"
                     chmod 700 "$STATE_DIR"
                     chmod +x deploy/scripts/verify-deployment.sh
@@ -49,9 +63,9 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-                    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config --quiet
-                    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build --pull
-                    docker image inspect "kolog_backend:$IMAGE_TAG" >/dev/null
+                    docker compose --project-directory "$COMPOSE_DIRECTORY" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" config --quiet
+                    docker compose --project-directory "$COMPOSE_DIRECTORY" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build --pull
+                    docker image inspect "$IMAGE_NAME:$IMAGE_TAG" >/dev/null
                 '''
             }
         }
@@ -72,7 +86,7 @@ pipeline {
                         if (!(tag ==~ /[A-Za-z0-9_.-]+/)) {
                             error('Stored rollback image tag is invalid')
                         }
-                        def expectedImage = "kolog_backend:${tag}"
+                        def expectedImage = "${env.IMAGE_NAME}:${tag}"
                         def currentImage = sh(
                             script: "docker inspect --format '{{.Config.Image}}' '${env.CONTAINER_NAME}' 2>/dev/null || true",
                             returnStdout: true
@@ -100,8 +114,8 @@ pipeline {
                     try {
                         sh '''
                             set -eu
-                            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans --no-build
-                            deploy/scripts/verify-deployment.sh "$CONTAINER_NAME" 180
+                            docker compose --project-directory "$COMPOSE_DIRECTORY" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans --no-build
+                            deploy/scripts/verify-deployment.sh "$CONTAINER_NAME" "$DEPLOY_TIMEOUT" "$HEALTHCHECK_URL"
                         '''
 
                         sh '''
@@ -121,11 +135,12 @@ pipeline {
                         '''
                     } catch (deployError) {
                         if (env.ROLLBACK_TAG?.trim()) {
-                            echo "Deployment failed; rolling back to kolog_backend:${env.ROLLBACK_TAG}"
+                            echo "Deployment failed; rolling back to ${env.IMAGE_NAME}:${env.ROLLBACK_TAG}"
                             int rollbackStatus = sh(
                                 script: '''
                                     set +e
                                     IMAGE_TAG="$ROLLBACK_TAG" docker compose \
+                                      --project-directory "$COMPOSE_DIRECTORY" \
                                       --env-file "$ENV_FILE" \
                                       -f "$STATE_DIR/last-known-good-compose.yml" \
                                       up -d --remove-orphans --no-build
@@ -133,7 +148,7 @@ pipeline {
                                     if [ "$up_rc" -ne 0 ]; then
                                         exit "$up_rc"
                                     fi
-                                    deploy/scripts/verify-deployment.sh "$CONTAINER_NAME" 180
+                                    deploy/scripts/verify-deployment.sh "$CONTAINER_NAME" "$DEPLOY_TIMEOUT" "$HEALTHCHECK_URL"
                                 ''',
                                 returnStatus: true
                             )
@@ -155,8 +170,12 @@ pipeline {
     post {
         always {
             sh '''
-                rm -f "$ENV_FILE"
-                rm -f "$STATE_DIR"/*.tmp
+                if [ -n "${ENV_FILE:-}" ] && [ "$ENV_FILE" != / ]; then
+                    rm -f -- "$ENV_FILE"
+                fi
+                if [ -n "${STATE_DIR:-}" ] && [ "$STATE_DIR" != / ] && [ -d "$STATE_DIR" ]; then
+                    rm -f -- "$STATE_DIR/last-known-good-compose.yml.tmp" "$STATE_DIR/last-known-good.env.tmp"
+                fi
             '''
         }
     }
