@@ -9,12 +9,8 @@ pipeline {
 
     environment {
         COMPOSE_FILE = 'deploy/docker-compose.yml'
-        ENV_FILE = 'deploy/.env'
-        COMPOSE_PROJECT_NAME = 'kolog_backend'
-        CONTAINER_NAME = 'kolog_backend'
-        ENV_CREDENTIAL_ID = 'kolog-be-env'
-        STATE_DIR = "${JENKINS_HOME}/kolog-backend-deploy"
-        BUILD_CONTEXT = "${WORKSPACE}"
+        ENV_FILE = '.env'
+        COMPOSE_PROJECT_NAME = 'kolog'
     }
 
     stages {

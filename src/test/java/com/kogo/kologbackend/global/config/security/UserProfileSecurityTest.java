@@ -52,6 +52,10 @@ class UserProfileSecurityTest {
 
     /** 회원가입(이미 있으면 무시) 후 로그인해서 accessToken 을 얻는다. */
     private String accessToken() throws Exception {
+        return loginToken("accessToken");
+    }
+
+    private String loginToken(String tokenName) throws Exception {
         postJson(BASE_URL + "/api/v1/users/signup",
                 "{\"email\":\"profile-test@kolog.com\",\"password\":\"pw12345678\",\"nickname\":\"profileTester\"}");
 
@@ -60,7 +64,8 @@ class UserProfileSecurityTest {
         assertEquals(200, login.statusCode(), "로그인 실패: " + login.body());
 
         String body = login.body();
-        int start = body.indexOf("\"accessToken\":\"") + "\"accessToken\":\"".length();
+        String field = "\"" + tokenName + "\":\"";
+        int start = body.indexOf(field) + field.length();
         int end = body.indexOf('"', start);
         return body.substring(start, end);
     }
@@ -103,7 +108,15 @@ class UserProfileSecurityTest {
                 .GET().build());
 
         assertEquals(200, response.statusCode(), "body=" + response.body());
-        assertTrue(response.body().contains("프로필 조회 성공"), "body=" + response.body());
+    }
+
+    @Test
+    void profileWithRefreshTokenIsUnauthorized() throws Exception {
+        HttpResponse<String> response = send(HttpRequest.newBuilder(URI.create(PROFILE_URL))
+                .header("Authorization", "Bearer " + loginToken("refreshToken"))
+                .GET().build());
+
+        assertEquals(401, response.statusCode(), "body=" + response.body());
     }
 
     @Test

@@ -8,17 +8,11 @@ services:
     image: kolog_backend:${IMAGE_TAG:?IMAGE_TAG must be set to an immutable build tag}
     container_name: kolog_backend
     restart: unless-stopped
-    environment:
-      DB_URL: ${DB_URL:?DB_URL must be set}
-      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
-      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/storage/}
-      FILE_SERVER_URL: ${FILE_SERVER_URL:?FILE_SERVER_URL must be set}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
-      HIBERNATE_FORMAT_SQL: ${HIBERNATE_FORMAT_SQL:-false}
-      HIBERNATE_HIGHLIGHT_SQL: ${HIBERNATE_HIGHLIGHT_SQL:-false}
+    env_file:
+      - ../.env
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "${APP_PORT:-8001}:8080"
     volumes:
@@ -35,11 +29,29 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kolog
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - kolog-db-data:/var/lib/postgresql/data
+    networks:
+      - kolog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 networks:
   kolog_backend_network:
     name: kolog_backend_network
     driver: bridge
 
 volumes:
-  kolog_backend_storage_data:
-    name: kolog_backend_storage_data
+  kolog-storage:
+  kolog-db-data:
