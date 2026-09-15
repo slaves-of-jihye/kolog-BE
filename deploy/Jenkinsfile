@@ -17,7 +17,6 @@ pipeline {
         COMPOSE_PROJECT_NAME = 'kolog'
         IMAGE_NAME = 'kolog_backend'
         CONTAINER_NAME = 'kolog_backend'
-        APP_PORT = '8001'
         NETWORK_NAME = 'kolog_kolog-network'
         STORAGE_VOLUME_NAME = 'kolog_kolog-storage'
         DB_VOLUME_NAME = 'kolog_kolog-db-data'
