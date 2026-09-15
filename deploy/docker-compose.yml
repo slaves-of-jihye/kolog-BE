@@ -14,7 +14,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${APP_PORT:?Set APP_PORT in the root .env file}:8080"
+      - "${APP_PORT:?APP_PORT is required}"
     volumes:
       - kolog-storage:/app/storage
     networks:
