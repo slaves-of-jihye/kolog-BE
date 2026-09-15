@@ -1,10 +1,12 @@
+name: kolog_backend
+
 services:
-  app:
+  kolog_backend:
     build:
-      context: ..
+      context: ${BUILD_CONTEXT:-..}
       dockerfile: deploy/Dockerfile
-    image: kolog-be:latest
-    container_name: kolog-be
+    image: kolog_backend:${IMAGE_TAG:?IMAGE_TAG must be set to an immutable build tag}
+    container_name: kolog_backend
     restart: unless-stopped
     env_file:
       - ../.env
@@ -12,11 +14,20 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8001:8080"
+      - "${APP_PORT:-8001}:8080"
     volumes:
-      - kolog-storage:/app/storage
+      - kolog_backend_storage_data:/app/storage
     networks:
-      - kolog-network
+      - kolog_backend_network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/api/v1/logs/hours"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
 
   db:
     image: postgres:17
@@ -37,7 +48,8 @@ services:
       start_period: 10s
 
 networks:
-  kolog-network:
+  kolog_backend_network:
+    name: kolog_backend_network
     driver: bridge
 
 volumes:
