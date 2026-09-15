@@ -23,17 +23,19 @@ public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
     public UserProfileResponse updateProfile(Long userId, String nickname, MultipartFile profileImage) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
-        String imageUrl = user.getUserInfo().getProfileImage();
-        if (profileImage != null && !profileImage.isEmpty()) {
-            imageUrl = fileService.storeFile(profileImage);
-        }
-
         String targetNickname = user.getUserInfo().getNickname();
         if (nickname != null && !nickname.isBlank()) {
             if (!nickname.equals(targetNickname) && userRepository.existsByUserInfo_Nickname(nickname)) {
                 throw new RuntimeException("이미 존재하는 닉네임입니다.");
             }
             targetNickname = nickname;
+        }
+
+        String imageUrl = user.getUserInfo().getProfileImage();
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String previousImageUrl = imageUrl;
+            imageUrl = fileService.storeImage(profileImage);
+            fileService.deleteAfterCommit(previousImageUrl);
         }
 
         user.updateProfile(targetNickname, imageUrl);

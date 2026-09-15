@@ -8,6 +8,9 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8001:8080"
     volumes:
@@ -15,9 +18,28 @@ services:
     networks:
       - kolog-network
 
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kolog
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - kolog-db-data:/var/lib/postgresql/data
+    networks:
+      - kolog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 networks:
   kolog-network:
     driver: bridge
 
 volumes:
   kolog-storage:
+  kolog-db-data:

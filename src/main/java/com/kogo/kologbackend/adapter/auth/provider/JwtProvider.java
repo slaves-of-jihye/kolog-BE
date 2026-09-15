@@ -14,30 +14,37 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+    @Value("${jwt.access-secret}")
+    private String accessSecret;
+
+    @Value("${jwt.refresh-secret}")
+    private String refreshSecret;
+
+    private Key accessSigningKey;
+    private Key refreshSigningKey;
 
     private final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24; // 1일
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
 
     @PostConstruct
     void validateSecretKey() {
-        if (secretKey == null || secretKey.getBytes(StandardCharsets.UTF_8).length < 32) {
-            throw new IllegalStateException("jwt.secret must be at least 32 bytes for HS256.");
+        accessSigningKey = signingKey(accessSecret, "jwt.access-secret");
+        refreshSigningKey = signingKey(refreshSecret, "jwt.refresh-secret");
+        if (accessSecret.equals(refreshSecret)) {
+            throw new IllegalStateException("JWT access and refresh secrets must be different.");
         }
     }
 
     public String createAccessToken(Long userId) {
-        return createToken(userId, ACCESS_TOKEN_EXPIRE_TIME);
+        return createToken(userId, ACCESS_TOKEN_EXPIRE_TIME, accessSigningKey);
     }
 
     public String createRefreshToken(Long userId) {
-        return createToken(userId, REFRESH_TOKEN_EXPIRE_TIME);
+        return createToken(userId, REFRESH_TOKEN_EXPIRE_TIME, refreshSigningKey);
     }
 
-    private String createToken(Long userId, long expireTime) {
+    private String createToken(Long userId, long expireTime, Key key) {
         Date now = new Date();
-        Key key = getSigningKey();
 
         return Jwts.builder()
                 .setSubject(userId.toString())
@@ -48,10 +55,8 @@ public class JwtProvider {
     }
 
     public Long getUserIdFromToken(String token) {
-        Key key = getSigningKey();
-
         String subject = Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(accessSigningKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -60,7 +65,10 @@ public class JwtProvider {
         return Long.parseLong(subject);
     }
 
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    private Key signingKey(String secret, String property) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException(property + " must be at least 32 bytes for HS256.");
+        }
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 }
