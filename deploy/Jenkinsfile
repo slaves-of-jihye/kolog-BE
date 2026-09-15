@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         COMPOSE_FILE = 'deploy/docker-compose.yml'
-        ENV_FILE = 'deploy/.env'
+        ENV_FILE = '.env'
         COMPOSE_PROJECT_NAME = 'kolog'
     }
 

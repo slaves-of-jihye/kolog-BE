@@ -7,7 +7,7 @@ services:
     container_name: kolog-be
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ../.env
     depends_on:
       db:
         condition: service_healthy
