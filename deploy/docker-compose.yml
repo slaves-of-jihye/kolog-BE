@@ -21,10 +21,11 @@ services:
       - kolog-network
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "--show-error", "${HEALTHCHECK_URL:?HEALTHCHECK_URL is required}"]
-      interval: 10s
+      interval: 3m
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 1m
+      start_interval: 1m
     stop_grace_period: 30s
     security_opt:
       - no-new-privileges:true
@@ -42,10 +43,11 @@ services:
       - kolog-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
-      interval: 5s
+      interval: 3m
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 1m
+      start_interval: 1m
 
 networks:
   kolog-network:
