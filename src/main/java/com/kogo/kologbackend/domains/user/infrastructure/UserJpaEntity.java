@@ -1,14 +1,13 @@
-package com.kogo.kologbackend.domain.user;
+package com.kogo.kologbackend.domains.user.infrastructure;
 
-import com.kogo.kologbackend.domain.user.element.UserInfo;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table(name = "users")
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+@Getter
+public class UserJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,19 +19,21 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Embedded
-    @Setter
-    private UserInfo userInfo = new UserInfo();
+    private String nickname;
+
+    private String profileImage;
 
     @Builder
-    public User(String email, String password, String nickname) {
+    public UserJpaEntity(Long id, String email, String password, String nickname, String profileImage) {
+        this.id = id;
         this.email = email;
         this.password = password;
-        this.userInfo.setNickname(nickname);
+        this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 
     public void updateProfile(String nickname, String profileImage) {
-        this.userInfo.setNickname(nickname);
-        this.userInfo.setProfileImage(profileImage);
+        this.nickname = nickname;
+        this.profileImage = profileImage;
     }
 }

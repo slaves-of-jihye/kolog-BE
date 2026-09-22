@@ -1,6 +1,6 @@
 package com.kogo.kologbackend.adapter.video.controller;
 
-import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
+import com.kogo.kologbackend.global.response.ApiResponse;
 import com.kogo.kologbackend.application.chat.dto.request.ChatCreateRequest;
 import com.kogo.kologbackend.application.chat.dto.response.ChatGetListResponse;
 import com.kogo.kologbackend.application.chat.internal.ChatCreateUseCase;

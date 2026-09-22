@@ -1,6 +1,6 @@
 package com.kogo.kologbackend.adapter.log.controller;
 
-import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
+import com.kogo.kologbackend.global.response.ApiResponse;
 import com.kogo.kologbackend.application.log.dto.request.LogCaptionUpdateRequest;
 import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.application.log.dto.response.LogCaptionUpdateResponse;

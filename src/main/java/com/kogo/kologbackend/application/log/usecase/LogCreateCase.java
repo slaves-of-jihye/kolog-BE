@@ -4,9 +4,9 @@ import com.kogo.kologbackend.application.log.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.application.log.dto.response.LogCreateResponse;
 import com.kogo.kologbackend.application.log.external.LogRepository;
 import com.kogo.kologbackend.application.log.internal.LogCreateUseCase;
-import com.kogo.kologbackend.application.user.external.UserRepository;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaRepository;
 import com.kogo.kologbackend.domain.log.Log;
-import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
 import com.kogo.kologbackend.global.util.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,13 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class LogCreateCase implements LogCreateUseCase {
 
     private final LogRepository logRepository;
-    private final UserRepository userRepository;
+    private final UserJpaRepository userRepository;
     private final FileService fileService;
 
     @Override
     @Transactional
     public LogCreateResponse logCreate(Long userId, LogCreateRequest logCreateRequest) {
-        User user = userRepository.findById(userId)
+        UserJpaEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
         boolean exist = logRepository.existsByUserIdAndDateAndHour(userId, logCreateRequest.date(), logCreateRequest.hour());

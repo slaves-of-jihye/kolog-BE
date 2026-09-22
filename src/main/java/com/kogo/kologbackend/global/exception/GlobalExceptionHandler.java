@@ -1,6 +1,6 @@
 package com.kogo.kologbackend.global.exception;
 
-import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
+import com.kogo.kologbackend.global.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;

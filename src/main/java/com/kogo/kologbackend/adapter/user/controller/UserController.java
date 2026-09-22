@@ -1,6 +1,6 @@
 package com.kogo.kologbackend.adapter.user.controller;
 
-import com.kogo.kologbackend.adapter.auth.dto.response.ApiResponse;
+import com.kogo.kologbackend.global.response.ApiResponse;
 import com.kogo.kologbackend.application.user.dto.response.UserProfileResponse;
 import com.kogo.kologbackend.application.user.internal.UserProfileGetUseCase;
 import com.kogo.kologbackend.application.user.internal.UserProfileUpdateUseCase;

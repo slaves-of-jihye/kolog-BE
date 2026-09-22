@@ -26,8 +26,8 @@ public class LogGetListCase implements LogGetListUseCase {
                             log.getDate(),
                             log.getHour(),
                             log.getUser().getId(),
-                            log.getUser().getUserInfo().getNickname(),
-                            log.getUser().getUserInfo().getProfileImage(),
+                            log.getUser().getNickname(),
+                            log.getUser().getProfileImage(),
                             log.getVideoUrl(),
                             log.getCaption()
                     );

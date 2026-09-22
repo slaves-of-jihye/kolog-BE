@@ -2,10 +2,9 @@ package com.kogo.kologbackend.application.log.usecase;
 
 import com.kogo.kologbackend.application.log.dto.response.LogGetByHourListResponse;
 import com.kogo.kologbackend.application.log.dto.response.LogGetByHourResponse;
-import com.kogo.kologbackend.application.log.dto.response.LogGetListResponse;
 import com.kogo.kologbackend.application.log.external.LogRepository;
 import com.kogo.kologbackend.application.log.internal.LogGetByHourUseCase;
-import com.kogo.kologbackend.application.user.external.UserRepository;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaRepository;
 import com.kogo.kologbackend.domain.log.Log;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ import java.util.List;
 public class LogGetByHourCase implements LogGetByHourUseCase {
 
     private final LogRepository logRepository;
-    private final UserRepository userRepository;
+    private final UserJpaRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,8 +36,8 @@ public class LogGetByHourCase implements LogGetByHourUseCase {
                         log.getDate(),
                         log.getHour(),
                         log.getUser().getId(),
-                        log.getUser().getUserInfo().getNickname(),
-                        log.getUser().getUserInfo().getProfileImage()
+                        log.getUser().getNickname(),
+                        log.getUser().getProfileImage()
                 )).toList();
 
         return new LogGetByHourListResponse(hours, logResponses);

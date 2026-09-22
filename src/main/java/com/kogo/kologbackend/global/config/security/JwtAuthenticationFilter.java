@@ -1,6 +1,6 @@
 package com.kogo.kologbackend.global.config.security;
 
-import com.kogo.kologbackend.adapter.auth.provider.JwtProvider;
+import com.kogo.kologbackend.domains.user.application.usecase.JwtProvider;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

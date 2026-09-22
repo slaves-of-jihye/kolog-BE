@@ -1,7 +1,7 @@
 package com.kogo.kologbackend.domain.chat;
 
 import com.kogo.kologbackend.domain.log.Log;
-import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,7 +19,7 @@ public class Chat {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserJpaEntity user;
 
     @ManyToOne
     @JoinColumn(name = "log_id")
@@ -28,7 +28,7 @@ public class Chat {
     private String chatContent;
 
     @Builder
-    public Chat(User user, Log log,String chatContent) {
+    public Chat(UserJpaEntity user, Log log, String chatContent) {
         this.user = user;
         this.log = log;
         this.chatContent = chatContent;

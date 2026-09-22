@@ -1,7 +1,7 @@
 package com.kogo.kologbackend.domain.emotion;
 
 import com.kogo.kologbackend.domain.log.Log;
-import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,14 +23,14 @@ public class Emotion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserJpaEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "log_id")
     private Log log;
 
     @Builder
-    public Emotion(String emotionId, User user, Log log) {
+    public Emotion(String emotionId, UserJpaEntity user, Log log) {
         this.emotionId = emotionId;
         this.user = user;
         this.log = log;

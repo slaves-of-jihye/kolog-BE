@@ -21,8 +21,8 @@ public class ChatGetListCase implements ChatGetListUseCase {
                 .map(chat -> new ChatGetListResponse(
                         chat.getChatId(),
                         chat.getUser().getId(),
-                        chat.getUser().getUserInfo().getNickname(),
-                        chat.getUser().getUserInfo().getProfileImage(),
+                        chat.getUser().getNickname(),
+                        chat.getUser().getProfileImage(),
                         chat.getChatContent()
                 ))
                 .toList();

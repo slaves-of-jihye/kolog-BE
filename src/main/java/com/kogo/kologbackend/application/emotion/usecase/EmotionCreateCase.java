@@ -4,10 +4,10 @@ import com.kogo.kologbackend.application.emotion.dto.request.EmotionCreateReques
 import com.kogo.kologbackend.application.emotion.external.EmotionRepository;
 import com.kogo.kologbackend.application.emotion.internal.EmotionCreateUseCase;
 import com.kogo.kologbackend.application.log.external.LogRepository;
-import com.kogo.kologbackend.application.user.external.UserRepository;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaRepository;
 import com.kogo.kologbackend.domain.emotion.Emotion;
 import com.kogo.kologbackend.domain.log.Log;
-import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class EmotionCreateCase implements EmotionCreateUseCase {
-    private final UserRepository userRepository;
+    private final UserJpaRepository userRepository;
     private final LogRepository logRepository;
     private final EmotionRepository emotionRepository;
 
@@ -26,7 +26,7 @@ public class EmotionCreateCase implements EmotionCreateUseCase {
             throw new RuntimeException("이미 해당 로그에 감정표현을 남겼습니다.");
         }
 
-        User user = userRepository.findById(userId)
+        UserJpaEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("해당하는 유저가 없습니다."));
 
         Log log = logRepository.findById(emotionCreateRequest.logId())

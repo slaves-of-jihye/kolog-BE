@@ -1,9 +1,9 @@
 package com.kogo.kologbackend.application.user.usecase;
 
 import com.kogo.kologbackend.application.user.dto.response.UserProfileResponse;
-import com.kogo.kologbackend.application.user.external.UserRepository;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaRepository;
 import com.kogo.kologbackend.application.user.internal.UserProfileUpdateUseCase;
-import com.kogo.kologbackend.domain.user.User;
+import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
 import com.kogo.kologbackend.global.util.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,23 +15,23 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
-    private final UserRepository userRepository;
+    private final UserJpaRepository userRepository;
     private final FileService fileService;
 
     @Override
     @Transactional
     public UserProfileResponse updateProfile(Long userId, String nickname, MultipartFile profileImage) {
-        User user = userRepository.findById(userId)
+        UserJpaEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
-        String targetNickname = user.getUserInfo().getNickname();
+        String targetNickname = user.getNickname();
         if (nickname != null && !nickname.isBlank()) {
-            if (!nickname.equals(targetNickname) && userRepository.existsByUserInfo_Nickname(nickname)) {
+            if (!nickname.equals(targetNickname) && userRepository.existsByNickname(nickname)) {
                 throw new RuntimeException("이미 존재하는 닉네임입니다.");
             }
             targetNickname = nickname;
         }
 
-        String imageUrl = user.getUserInfo().getProfileImage();
+        String imageUrl = user.getProfileImage();
         if (profileImage != null && !profileImage.isEmpty()) {
             String previousImageUrl = imageUrl;
             imageUrl = fileService.storeImage(profileImage);
@@ -42,8 +42,8 @@ public class UserProfileUpdateCase implements UserProfileUpdateUseCase {
 
         return new UserProfileResponse(
                 user.getId(),
-                user.getUserInfo().getNickname(),
-                user.getUserInfo().getProfileImage(),
+                user.getNickname(),
+                user.getProfileImage(),
                 user.getEmail(),
                 LocalDateTime.now().toString()
         );
