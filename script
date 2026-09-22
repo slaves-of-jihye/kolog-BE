@@ -1,4 +1,0 @@
-docker build --tag kolog-be:latest .
-docker stop kolog-be
-docker rm kolog-be
-docker run -d -p 8080:8080 --name kolog-be --env-file ./.env kolog-be:latest
