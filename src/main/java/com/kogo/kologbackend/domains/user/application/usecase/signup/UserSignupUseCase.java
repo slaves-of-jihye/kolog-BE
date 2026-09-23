@@ -1,5 +1,6 @@
 package com.kogo.kologbackend.domains.user.application.usecase.signup;
 
+import com.kogo.kologbackend.domains.user.application.exception.DuplicateEmailException;
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
 import com.kogo.kologbackend.domains.user.application.usecase.JwtProvider;
 import com.kogo.kologbackend.domains.user.domain.User;
@@ -13,6 +14,10 @@ public class UserSignupUseCase {
     private final JwtProvider jwtProvider;
 
     public UserSignupResponse signup(UserSignupRequest request) {
+        if (repository.existsByEmail(request.email())) {
+            throw new DuplicateEmailException(request.email());
+        }
+
         User user = new User(
                 null,
                 request.email(),

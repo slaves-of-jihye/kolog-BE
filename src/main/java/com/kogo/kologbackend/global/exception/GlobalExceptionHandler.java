@@ -1,5 +1,6 @@
 package com.kogo.kologbackend.global.exception;
 
+import com.kogo.kologbackend.domains.user.application.exception.DuplicateEmailException;
 import com.kogo.kologbackend.global.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException e) {
         return build(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateEmail(DuplicateEmailException e) {
+        return build(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

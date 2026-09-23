@@ -15,4 +15,9 @@ public class UserRepositoryImpl implements UserRepository {
         UserJpaEntity entity = UserMapper.toEntity(user);
         return UserMapper.toDomain(repository.save(entity));
     }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return repository.existsByEmail(email);
+    }
 }
