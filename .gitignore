@@ -1,6 +1,6 @@
 HELP.md
 .gradle
-build/
+/build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -39,4 +39,5 @@ out/
 # Security / Credentials
 .env
 *.env
+!external/build/.env
 .DS_Store
