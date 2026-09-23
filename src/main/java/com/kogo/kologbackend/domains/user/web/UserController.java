@@ -1,8 +1,8 @@
 package com.kogo.kologbackend.domains.user.web;
 
-import com.kogo.kologbackend.domains.user.application.profile.dto.response.UserProfileResponse;
-import com.kogo.kologbackend.domains.user.application.profile.internal.UserProfileGetUseCase;
-import com.kogo.kologbackend.domains.user.application.profile.internal.UserProfileUpdateUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.profile.UserProfileGetCase;
+import com.kogo.kologbackend.domains.user.application.usecase.profile.UserProfileUpdateCase;
+import com.kogo.kologbackend.domains.user.application.usecase.profile.UserProfileResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.signup.UserSignupRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.signup.UserSignupResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.signup.UserSignupUseCase;
@@ -19,8 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/users")
 public class UserController {
     private final UserSignupUseCase userSignupUseCase;
-    private final UserProfileGetUseCase userProfileGetUseCase;
-    private final UserProfileUpdateUseCase userProfileUpdateUseCase;
+    private final UserProfileGetCase userProfileGetCase;
+    private final UserProfileUpdateCase userProfileUpdateCase;
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
@@ -32,7 +32,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserProfileResponse>> getProfile(
             @AuthenticationPrincipal Long userId
     ) {
-        UserProfileResponse data = userProfileGetUseCase.getProfile(userId);
+        UserProfileResponse data = userProfileGetCase.getProfile(userId);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,
@@ -47,7 +47,7 @@ public class UserController {
             @RequestParam(value = "nickname", required = false) String nickname,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage
     ) {
-        UserProfileResponse data = userProfileUpdateUseCase.updateProfile(userId, nickname, profileImage);
+        UserProfileResponse data = userProfileUpdateCase.updateProfile(userId, nickname, profileImage);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 200,

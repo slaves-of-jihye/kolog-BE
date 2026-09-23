@@ -1,0 +1,27 @@
+package com.kogo.kologbackend.domains.log.infrastructure;
+
+import com.kogo.kologbackend.domains.log.application.usecase.logGetHourList.LogGetHourList;
+import com.kogo.kologbackend.domains.log.application.usecase.logGetHourList.LogHourRaw;
+import com.kogo.kologbackend.domains.log.domain.Log;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+
+public interface LogRepository extends JpaRepository<Log,Long> {
+
+    @Query("select l from Log l join fetch l.user u where l.date = :date")
+    List<Log> findByDate(String date);
+
+    @Query("select l from Log l join fetch l.user u where l.date = :date and l.hour = :hour")
+    List<Log> findByDateAndHour(@Param("date") String date, @Param("hour") Integer hour);
+
+    boolean existsByUserIdAndDateAndHour(Long userId, String date, Integer hour);
+
+    @Query("select l.date, l.hour from Log l group by l.date, l.hour order by l.date, l.hour")
+    List<LogHourRaw> findByHour();
+
+    @Query("select distinct l.hour from Log l where l.date=:date order by l.hour asc")
+    List<Integer> findHourByDate(@Param("date") String date);
+}
