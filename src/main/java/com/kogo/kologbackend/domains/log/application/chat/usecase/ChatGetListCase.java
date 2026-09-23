@@ -1,0 +1,30 @@
+package com.kogo.kologbackend.domains.log.application.chat.usecase;
+
+import com.kogo.kologbackend.domains.log.application.chat.dto.response.ChatGetListResponse;
+import com.kogo.kologbackend.domains.log.application.chat.external.ChatRepository;
+import com.kogo.kologbackend.domains.log.application.chat.internal.ChatGetListUseCase;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ChatGetListCase implements ChatGetListUseCase {
+    private final ChatRepository chatRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChatGetListResponse> getChatList(Long logId) {
+        return chatRepository.findByLog_LogId(logId).stream()
+                .map(chat -> new ChatGetListResponse(
+                        chat.getChatId(),
+                        chat.getUser().getId(),
+                        chat.getUser().getNickname(),
+                        chat.getUser().getProfileImage(),
+                        chat.getChatContent()
+                ))
+                .toList();
+    }
+}

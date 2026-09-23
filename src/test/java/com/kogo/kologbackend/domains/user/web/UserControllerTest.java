@@ -1,6 +1,8 @@
 package com.kogo.kologbackend.domains.user.web;
 
 import com.kogo.kologbackend.domains.user.application.exception.DuplicateEmailException;
+import com.kogo.kologbackend.domains.user.application.profile.internal.UserProfileGetUseCase;
+import com.kogo.kologbackend.domains.user.application.profile.internal.UserProfileUpdateUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.signup.UserSignupRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.signup.UserSignupResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.signup.UserSignupUseCase;
@@ -25,11 +27,18 @@ class UserControllerTest {
     @Mock
     private UserSignupUseCase userSignupUseCase;
 
+    @Mock
+    private UserProfileGetUseCase userProfileGetUseCase;
+
+    @Mock
+    private UserProfileUpdateUseCase userProfileUpdateUseCase;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new UserController(userSignupUseCase))
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new UserController(userSignupUseCase, userProfileGetUseCase, userProfileUpdateUseCase))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
