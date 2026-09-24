@@ -11,6 +11,7 @@ public final class UserMapper {
                 .email(user.email())
                 .password(user.password())
                 .nickname(user.nickname())
+                .profileImage(user.profileImage())
                 .build();
     }
 
@@ -19,7 +20,8 @@ public final class UserMapper {
                 entity.getId(),
                 entity.getEmail(),
                 entity.getPassword(),
-                entity.getNickname()
+                entity.getNickname(),
+                entity.getProfileImage()
         );
     }
 }

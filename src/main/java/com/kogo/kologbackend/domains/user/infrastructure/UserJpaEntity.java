@@ -19,21 +19,17 @@ public class UserJpaEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String nickname;
 
-    private String profileImage;
+    private String profileImageUrl;
 
     @Builder
-    public UserJpaEntity(Long id, String email, String password, String nickname, String profileImage) {
+    public UserJpaEntity(Long id, String email, String password, String nickname, String profileImageUrl) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.profileImage = profileImage;
-    }
-
-    public void updateProfile(String nickname, String profileImage) {
-        this.nickname = nickname;
-        this.profileImage = profileImage;
+        this.profileImageUrl = profileImageUrl;
     }
 }

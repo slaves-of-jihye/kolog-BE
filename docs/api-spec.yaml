@@ -1,0 +1,568 @@
+openapi: 3.0.3
+info:
+  title: kolog API
+  description: >
+    실제 서버에 적용된 springdoc/swagger 없이, IDE의 OpenAPI 뷰어로 열람하기 위한
+    정적 스펙 문서. 각 엔드포인트의 `description`에 수행 로직을 간단히 적었다.
+  version: "1.0.0"
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: User
+  - name: Log
+  - name: Chat
+  - name: Emotion
+
+paths:
+  /users/signup:
+    post:
+      tags: [User]
+      summary: 회원가입
+      description: 이메일 중복 확인(중복 시 409) → 유저 저장(비밀번호 평문) → 액세스/리프레시 토큰 발급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignupRequest'
+      responses:
+        "201":
+          description: 가입 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignupResponse'
+
+  /users/login:
+    post:
+      tags: [User]
+      summary: 로그인
+      description: 이메일로 유저 조회 → 비밀번호 일치 확인(불일치/미존재 시 401) → 토큰 발급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+      responses:
+        "200":
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLoginResponse'
+
+  /users/me:
+    get:
+      tags: [User]
+      summary: 내 토큰 정보 조회
+      description: >
+        Authorization: Bearer {token} 헤더에서 토큰 추출 → JWT 서명 검증 및 디코딩 →
+        클레임(subject/발급시각/만료시각)을 그대로 DTO에 담아 반환
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJhbGciOi..."
+      responses:
+        "200":
+          description: 토큰 클레임
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMeResponse'
+
+  /users/{userId}/profile:
+    get:
+      tags: [User]
+      summary: 프로필 조회
+      description: userId(path)로 유저 조회 → 프로필(닉네임/이미지) + 이메일 조합해 반환
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: 프로필 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+
+    patch:
+      tags: [User]
+      summary: 프로필 수정
+      description: >
+        닉네임 변경 시 중복 확인 후 갱신, 프로필 이미지 첨부 시 파일 저장 후 기존 파일 삭제 →
+        갱신된 프로필 + 이메일 반환
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: nickname
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profileImage:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: 프로필 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+
+  /logs/video:
+    post:
+      tags: [Log]
+      summary: 로그(영상) 생성
+      description: >
+        유저 존재 확인 → 동일 유저의 같은 날짜/시간대 로그 중복 확인(있으면 예외) →
+        영상 파일 저장 → 로그 생성
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                videoFile:
+                  type: string
+                  format: binary
+                caption:
+                  type: string
+                date:
+                  type: string
+                  example: "2026-01-01"
+                hour:
+                  type: integer
+      responses:
+        "200":
+          description: 로그 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogCreateResponse'
+
+  /logs/{date}:
+    get:
+      tags: [Log]
+      summary: 날짜별 로그 목록 조회
+      description: 해당 날짜의 로그를 작성자 정보와 함께 조회
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "2026-01-01"
+      responses:
+        "200":
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogGetListResponse'
+
+  /logs/hour:
+    get:
+      tags: [Log]
+      summary: 날짜+시간대 로그 조회
+      description: 날짜의 전체 로그 시간대 목록 조회 + 해당 날짜·시간의 로그 목록을 작성자 정보와 함께 조회
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hour
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogGetByHourListResponse'
+
+  /logs/{logId}/caption:
+    patch:
+      tags: [Log]
+      summary: 로그 캡션 수정
+      description: 로그 조회(없으면 404) → 요청자가 작성자인지 확인(아니면 예외) → 캡션 수정
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogCaptionUpdateRequest'
+      responses:
+        "200":
+          description: 캡션 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogCaptionUpdateResponse'
+
+  /logs/hours:
+    get:
+      tags: [Log]
+      summary: 전체 로그 시간대 목록 조회
+      description: 전체 로그를 날짜별로 그룹핑해 시간대 목록 구성
+      responses:
+        "200":
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogGetHourList'
+
+  /logs/delete/{logId}:
+    delete:
+      tags: [Log]
+      summary: 로그 삭제
+      description: 로그 조회(없으면 404) → 요청자가 작성자인지 확인(아니면 예외) → 로그 삭제 및 영상 파일 삭제
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: 삭제 성공 (본문 없음)
+
+  /video/chat:
+    post:
+      tags: [Chat]
+      summary: 댓글 작성
+      description: 유저·로그 존재 확인 → 댓글 저장. 응답은 요청에 담긴 chatContent 문자열 그대로 에코
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCreateRequest'
+      responses:
+        "200":
+          description: 작성 성공
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /video/{logId}/chat:
+    get:
+      tags: [Chat]
+      summary: 댓글 목록 조회
+      description: 해당 로그의 댓글 목록을 작성자 정보와 함께 조회
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatGetListResponse'
+
+  /video/emotion:
+    post:
+      tags: [Emotion]
+      summary: 감정표현 남기기
+      description: >
+        동일 유저가 해당 로그에 이미 감정표현을 남겼는지 확인(있으면 예외) →
+        유저·로그 존재 확인 → 감정표현 저장. 응답은 요청에 담긴 emotionId 문자열 그대로 에코
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmotionCreateRequest'
+      responses:
+        "200":
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                type: string
+
+components:
+  schemas:
+    UserSignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        nickname:
+          type: string
+
+    UserSignupResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    UserLoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    UserLoginResponse:
+      type: object
+      properties:
+        grantType:
+          type: string
+          example: "Bearer"
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    UserMeResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        issuedAt:
+          type: string
+          format: date-time
+        expiration:
+          type: string
+          format: date-time
+
+    UserProfileResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+        profileImage:
+          type: string
+          nullable: true
+        email:
+          type: string
+
+    LogCreateResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        logId:
+          type: integer
+          format: int64
+        videoUrl:
+          type: string
+        caption:
+          type: string
+          nullable: true
+        hour:
+          type: integer
+        date:
+          type: string
+
+    LogGetListResponse:
+      type: object
+      properties:
+        date:
+          type: string
+        hour:
+          type: integer
+        userId:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+        profileImage:
+          type: string
+          nullable: true
+        videoUrl:
+          type: string
+        caption:
+          type: string
+          nullable: true
+
+    LogGetByHourResponse:
+      type: object
+      properties:
+        logId:
+          type: integer
+          format: int64
+        videoUrl:
+          type: string
+        caption:
+          type: string
+          nullable: true
+        date:
+          type: string
+        hour:
+          type: integer
+        userId:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+        profileImage:
+          type: string
+          nullable: true
+
+    LogGetByHourListResponse:
+      type: object
+      properties:
+        hours:
+          type: array
+          items:
+            type: integer
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogGetByHourResponse'
+
+    LogCaptionUpdateRequest:
+      type: object
+      properties:
+        caption:
+          type: string
+
+    LogCaptionUpdateResponse:
+      type: object
+      properties:
+        logId:
+          type: integer
+          format: int64
+        caption:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    LogGetHourList:
+      type: object
+      properties:
+        date:
+          type: string
+        hours:
+          type: array
+          items:
+            type: integer
+
+    ChatCreateRequest:
+      type: object
+      properties:
+        logId:
+          type: integer
+          format: int64
+        chatContent:
+          type: string
+
+    ChatGetListResponse:
+      type: object
+      properties:
+        chatId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+        profileImage:
+          type: string
+          nullable: true
+        chatContent:
+          type: string
+
+    EmotionCreateRequest:
+      type: object
+      properties:
+        logId:
+          type: integer
+          format: int64
+        emotionId:
+          type: string
