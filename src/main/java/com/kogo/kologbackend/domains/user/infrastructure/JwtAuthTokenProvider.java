@@ -18,10 +18,9 @@ import java.util.Date;
 @Component
 public class JwtAuthTokenProvider implements AuthTokenProvider {
 
-    @Value("${jwt.access-secret}")
+    @Value("${jwt.secret.access-token}")
     private String accessSecret;
-
-    @Value("${jwt.refresh-secret}")
+    @Value("${jwt.secret.refresh-token}")
     private String refreshSecret;
 
     private Key accessSigningKey;
