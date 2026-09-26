@@ -4,6 +4,7 @@ import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserLogin
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserLoginUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserSignupRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.UserGetUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.UserMeUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.dto.UserResponse;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
@@ -20,6 +21,7 @@ public class UserController {
     private final UserSignupUseCase userSignupUseCase;
     private final UserLoginUseCase userLoginUseCase;
     private final UserMeUseCase userMeUseCase;
+    private final UserGetUseCase userGetUseCase;
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
@@ -37,5 +39,11 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public UserResponse me(@AuthenticationPrincipal UserDetail userDetail) {
         return userMeUseCase.me(userDetail);
+    }
+
+    @GetMapping("/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse get(@PathVariable Long userId) {
+        return userGetUseCase.get(userId);
     }
 }
