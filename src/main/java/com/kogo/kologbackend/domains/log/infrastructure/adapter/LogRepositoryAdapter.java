@@ -8,6 +8,9 @@ import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
 public class LogRepositoryAdapter implements LogRepository {
@@ -18,6 +21,16 @@ public class LogRepositoryAdapter implements LogRepository {
     public Log save(Log log) {
         var user = users.getReferenceById(log.uploader().id());
         return LogMapper.toDomain(logs.save(LogMapper.toEntity(log, user)));
+    }
+
+    @Override
+    public List<Log> findByDateAndHour(LocalDate date, Integer hour) {
+        return logs.findByDateAndHour(date, hour).stream().map(LogMapper::toDomain).toList();
+    }
+
+    @Override
+    public List<Log> findByDate(LocalDate date) {
+        return logs.findByDate(date).stream().map(LogMapper::toDomain).toList();
     }
 
 }

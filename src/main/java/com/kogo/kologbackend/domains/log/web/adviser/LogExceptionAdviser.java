@@ -1,6 +1,8 @@
 package com.kogo.kologbackend.domains.log.web.adviser;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateException;
+import com.kogo.kologbackend.domains.log.application.exception.InvalidLogHourException;
+import com.kogo.kologbackend.domains.log.application.exception.InvalidLogQueryException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
@@ -19,6 +21,16 @@ public class LogExceptionAdviser {
 
     @ExceptionHandler(InvalidLogDateException.class)
     public ProblemDetail invalidDate(InvalidLogDateException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidLogHourException.class)
+    public ProblemDetail invalidHour(InvalidLogHourException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidLogQueryException.class)
+    public ProblemDetail invalidQuery(InvalidLogQueryException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
