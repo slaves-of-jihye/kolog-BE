@@ -3,7 +3,7 @@ package com.kogo.kologbackend.domains.user.application.usecase.auth;
 import com.kogo.kologbackend.domains.user.application.exception.DuplicateEmailException;
 import com.kogo.kologbackend.domains.user.application.external.AuthTokenProvider;
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
-import com.kogo.kologbackend.domains.user.application.external.dto.AccessToken;
+import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.external.dto.RefreshToken;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserSignupRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
@@ -31,12 +31,12 @@ public class UserSignupUseCase {
         );
         User saved = repository.save(user);
 
-        AccessToken accessToken = new AccessToken(saved.id());
-        RefreshToken refreshToken = new RefreshToken(saved.id());
+        UserDetail accessToken = UserDetail.builder().userId(saved.id()).build();
+        RefreshToken refreshToken = RefreshToken.builder().userId(saved.id()).build();
 
-        return new UserAuthResponse(
-                authTokenProvider.createAccessToken(accessToken),
-                authTokenProvider.createRefreshToken(refreshToken)
-        );
+        return UserAuthResponse.builder()
+                .accessToken(authTokenProvider.createAccessToken(accessToken))
+                .refreshToken(authTokenProvider.createRefreshToken(refreshToken))
+                .build();
     }
 }

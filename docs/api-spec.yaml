@@ -35,6 +35,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserSignupResponse'
 
+        "409":
+          description: 이미 가입된 이메일
   /users/login:
     post:
       tags: [User]
@@ -54,6 +56,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserLoginResponse'
 
+        "401":
+          description: 이메일 또는 비밀번호 오류
   /users/me:
     get:
       tags: [User]
@@ -137,15 +141,7 @@ paths:
       tags: [Log]
       summary: 로그(영상) 생성
       description: >
-        유저 존재 확인 → 동일 유저의 같은 날짜/시간대 로그 중복 확인(있으면 예외) →
-        영상 파일 저장 → 로그 생성
-      parameters:
-        - name: userId
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
+        인증된 사용자 확인 → 영상 형식 검증 → 영상 저장 → 로그 생성
       requestBody:
         required: true
         content:
@@ -161,16 +157,24 @@ paths:
                 date:
                   type: string
                   example: "2026-01-01"
-                hour:
+                term:
                   type: integer
       responses:
-        "200":
+        "201":
           description: 로그 생성 성공
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogCreateResponse'
 
+        "400":
+          description: 영상 누락, 지원하지 않는 영상 형식 또는 잘못된 날짜
+        "401":
+          description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
+        "404":
+          description: 로그를 작성할 사용자를 찾을 수 없음
+        "500":
+          description: 업로드 영상 스트림 읽기 중 서버 I/O 오류
   /logs/{date}:
     get:
       tags: [Log]
@@ -431,10 +435,10 @@ components:
     LogCreateResponse:
       type: object
       properties:
-        userId:
+        uploaderId:
           type: integer
           format: int64
-        logId:
+        id:
           type: integer
           format: int64
         videoUrl:

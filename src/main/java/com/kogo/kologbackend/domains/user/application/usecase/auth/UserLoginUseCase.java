@@ -3,7 +3,7 @@ package com.kogo.kologbackend.domains.user.application.usecase.auth;
 import com.kogo.kologbackend.domains.user.application.exception.InvalidCredentialsException;
 import com.kogo.kologbackend.domains.user.application.external.AuthTokenProvider;
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
-import com.kogo.kologbackend.domains.user.application.external.dto.AccessToken;
+import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.external.dto.RefreshToken;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserLoginRequest;
@@ -25,12 +25,12 @@ public class UserLoginUseCase {
             throw new InvalidCredentialsException();
         }
 
-        AccessToken accessToken = new AccessToken(user.id());
-        RefreshToken refreshToken = new RefreshToken(user.id());
+        UserDetail accessToken = UserDetail.builder().userId(user.id()).build();
+        RefreshToken refreshToken = RefreshToken.builder().userId(user.id()).build();
 
-        return new UserAuthResponse(
-                authTokenProvider.createAccessToken(accessToken),
-                authTokenProvider.createRefreshToken(refreshToken)
-        );
+        return UserAuthResponse.builder()
+                .accessToken(authTokenProvider.createAccessToken(accessToken))
+                .refreshToken(authTokenProvider.createRefreshToken(refreshToken))
+                .build();
     }
 }

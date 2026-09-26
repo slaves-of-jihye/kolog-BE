@@ -2,7 +2,7 @@ services:
   kolog-backend:
     build:
       context: ../..
-      dockerfile: Dockerfile
+      dockerfile: external/build/Dockerfile
     image: kolog-be:latest
     container_name: kolog-be-app
     depends_on:
@@ -12,6 +12,8 @@ services:
       - ../env/kolog-backend.env
     ports:
       - "${APP_PORT}:8080"
+    volumes:
+      - kolog-upload-data:/app/uploads
     networks:
       - kolog-network
     healthcheck:
@@ -45,4 +47,6 @@ networks:
 
 volumes:
   kolog-db-data:
+    driver: local
+  kolog-upload-data:
     driver: local
