@@ -10,8 +10,12 @@ domains/<domain>/
   application/
     external/                아웃바운드 포트(인터페이스): Repository, FileStorage, TokenProvider, Validator 등
       dto/                   포트 경계에서 오가는 DTO (UserDetail, RefreshToken)
-    usecase/<usecase-name>/  유스케이스 1개 = 클래스 1개 (logCreate, logList, crud, auth ...)
-      dto/                   그 유스케이스 전용 Request/Response 레코드
+    usecase/<concern>/       유스케이스를 "이름"이 아니라 "관심사 그룹"으로 묶는다 (crud, auth ...). 그룹 안에는
+                             관련 유스케이스 클래스를 flat하게 둔다 (예: crud/LogCreateCase, LogGetUseCase,
+                             LogListUseCase, LogUpdateUseCase가 모두 같은 crud/ 아래).
+      dto/request/           그 그룹의 요청 DTO. 요청/응답이 둘 다 있으면 request/response로 나눈다.
+      dto/response/          그 그룹의 응답 DTO. 요청 없이 응답 DTO 하나뿐이면 굳이 response/ 하위로 안 나누고
+                             dto/ 바로 아래 둬도 된다 (예: user/crud/dto/UserResponse.java).
     exception/               도메인 전용 RuntimeException. HTTP 상태 모름 (아래 "예외 처리" 참조)
   infrastructure/
     adapter/                 application/external 포트의 구현체 (Repository/Storage/TokenProvider 구현)
@@ -26,6 +30,12 @@ global/
     web/                     WebMvcConfigurer 등 전역 웹 설정 (정적 리소스 서빙 등)
     security/                SecurityConfig + filter/ (BearerTokenFilter). 컨트롤러 진입 전 인증 실패는 여기서만 처리
 ```
+
+> 과거에는 `usecase/logCreate/`, `usecase/logGet/`, `usecase/logList/`처럼 **유스케이스 하나당 패키지 하나**였다.
+> 이후 `crud`(생성/조회/목록/수정), `auth`(로그인/가입) 같은 **관심사 단위 패키지**로 재편했다 — 관련 유스케이스가
+> 늘어날수록 패키지가 무한히 갈라지는 것을 막고, 같은 그룹 안에서 `LogResponse.from(log)`처럼 응답 조립 로직을
+> 공유하기 쉽게 하기 위함이다. 새 유스케이스를 추가할 때 그 도메인에 이미 있는 관심사 그룹(crud/auth 등)에
+> 속하는지 먼저 확인하고, 없으면 새 그룹을 만들되 유스케이스 이름 그대로의 1:1 패키지는 만들지 않는다.
 
 ## 지켜야 할 패턴
 
@@ -60,6 +70,10 @@ global/
 ### 7. Repository 포트
 - `application/external`의 Repository 인터페이스는 유스케이스가 실제로 쓰는 메서드만 최소로 둔다. 새 조회가 필요하면 포트에 메서드를 추가하고, `infrastructure/jpa`에 Spring Data derived query, `infrastructure/adapter`에서 정적 `Mapper`로 도메인 레코드 변환까지 구현한다.
 
+### 8. 도메인 간에 겹치는 응답 모양은 소유 도메인의 DTO를 재사용한다
+- 다른 도메인 리소스를 요약해서 보여줘야 할 때(예: 로그 응답 안의 업로더 정보) 그 도메인 전용으로 축약 DTO를 새로 만들지 않고, 소유 도메인의 기존 응답 DTO를 그대로 참조한다 (`LogResponse.uploader`가 `user` 도메인의 `UserResponse`를 그대로 씀. 예전엔 `log` 쪽에 `LogUploaderResponse`를 중복 정의했었다 — 제거함).
+- 같은 그룹(`crud` 등) 안에서 생성/조회/목록/수정이 응답을 조립하는 로직이 겹치면 응답 DTO에 `XResponse.from(domain)` 정적 팩토리를 두고 재사용한다. 유스케이스 안에서 `builder()`를 직접 필드별로 채우는 코드를 복붙하지 않는다.
+
 ## 피해야 할 안티패턴
 
 - **공통 HTTP 예외 계층 부활 금지**: `global/exception` 같은 패키지에 상태코드 아는 부모 예외를 다시 만들지 않는다.
@@ -70,6 +84,8 @@ global/
 - **컨트롤러에서 체크 예외 try/catch 금지**: DTO 변환부/유스케이스로 위임.
 - **인터페이스·DTO에 여러 멤버가 있는 파일을 라인 범위로 수정할 때 기존 멤버를 실수로 지우기 쉽다** — 특히 `save()` 같은 기존 메서드를 새 메서드 추가 편집 중 통째로 날린 사고가 두 번 있었다. 범위 수정 후 반드시 전체 파일을 다시 읽어 확인한다.
 - **API 문서(`docs/api-spec.yaml`)는 자동 생성되지 않는다**: 일부 항목(`/logs/{date}`, `/logs/hour`, `/users/{userId}/profile` 등)은 실제 구현되지 않은 과거 초안이다. 문서를 그대로 신뢰하지 말고 실제 컨트롤러 코드를 기준으로 판단하며, 새 기능을 구현하면 해당 부분만 실제 스펙에 맞게 갱신한다.
+- **유스케이스 이름 그대로 1:1 패키지(`logCreate/`, `logGet/`, `logUpdate/` ...) 만들지 않는다**: `crud`/`auth` 같은 관심사 그룹 아래 flat하게 둔다.
+- **다른 도메인 응답을 요약하려고 도메인별 축약 DTO(`LogUploaderResponse` 같은) 중복 정의 금지**: 소유 도메인의 응답 DTO를 참조한다.
 
 ## 운영/검증 메모
 
