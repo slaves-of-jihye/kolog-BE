@@ -6,8 +6,9 @@ import com.kogo.kologbackend.domains.log.application.exception.VideoUploadExcept
 import com.kogo.kologbackend.domains.log.application.external.LogFileStorage;
 import com.kogo.kologbackend.domains.log.application.external.LogRepository;
 import com.kogo.kologbackend.domains.log.application.external.LogVideoValidator;
+import com.kogo.kologbackend.domains.log.application.usecase.dto.LogResponse;
+import com.kogo.kologbackend.domains.log.application.usecase.dto.LogUploaderResponse;
 import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateRequest;
-import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateResponse;
 import com.kogo.kologbackend.domains.log.domain.Log;
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class LogCreateCase {
     private final LogFileStorage files;
 
     @Transactional
-    public LogCreateResponse logCreate(LogCreateRequest request) {
+    public LogResponse logCreate(LogCreateRequest request) {
         try (BufferedInputStream video = new BufferedInputStream(request.videoFile())) {
             var user = users.findById(request.uploader().userId())
                     .orElseThrow(LogUserNotFoundException::new);
@@ -42,9 +43,11 @@ public class LogCreateCase {
             String mediaType = videoValidator.detectSupportedMediaType(video);
             String videoUrl = files.storeVideo(video, mediaType);
             Log saved = logRepository.save(new Log(null, videoUrl, request.caption(), date, request.hour(), user));
-            return LogCreateResponse.builder().id(saved.id()).videoUrl(saved.videoUrl())
+            return LogResponse.builder().id(saved.id()).videoUrl(saved.videoUrl())
                     .caption(saved.caption()).date(saved.date()).hour(saved.hour())
-                    .uploaderId(user.id()).build();
+                    .uploader(LogUploaderResponse.builder().id(user.id())
+                            .nickname(user.nickname()).profileImageUrl(user.profileImageUrl()).build())
+                    .build();
         } catch (IOException e) {
             throw new VideoUploadException("Failed to read or close the uploaded video.", e);
         }

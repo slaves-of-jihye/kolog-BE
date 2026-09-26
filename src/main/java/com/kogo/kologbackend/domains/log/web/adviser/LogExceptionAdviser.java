@@ -4,6 +4,7 @@ import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateExc
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogHourException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogQueryException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
+import com.kogo.kologbackend.domains.log.application.exception.LogNotFoundException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
 import com.kogo.kologbackend.domains.log.web.controller.LogController;
@@ -36,6 +37,11 @@ public class LogExceptionAdviser {
 
     @ExceptionHandler(LogUserNotFoundException.class)
     public ProblemDetail missingUser(LogUserNotFoundException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(LogNotFoundException.class)
+    public ProblemDetail logNotFound(LogNotFoundException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,6 +22,11 @@ public class LogRepositoryAdapter implements LogRepository {
     public Log save(Log log) {
         var user = users.getReferenceById(log.uploader().id());
         return LogMapper.toDomain(logs.save(LogMapper.toEntity(log, user)));
+    }
+
+    @Override
+    public Optional<Log> findById(Long id) {
+        return logs.findById(id).map(LogMapper::toDomain);
     }
 
     @Override

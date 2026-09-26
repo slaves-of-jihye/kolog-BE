@@ -4,8 +4,9 @@ import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateExc
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogHourException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogQueryException;
 import com.kogo.kologbackend.domains.log.application.external.LogRepository;
+import com.kogo.kologbackend.domains.log.application.usecase.dto.LogResponse;
+import com.kogo.kologbackend.domains.log.application.usecase.dto.LogUploaderResponse;
 import com.kogo.kologbackend.domains.log.application.usecase.logList.dto.LogListRequest;
-import com.kogo.kologbackend.domains.log.application.usecase.logList.dto.LogListResponse;
 import com.kogo.kologbackend.domains.log.domain.Log;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ import java.util.List;
 public class LogListUseCase {
     private final LogRepository logRepository;
 
-    public List<LogListResponse> list(LogListRequest request) {
+    public List<LogResponse> list(LogListRequest request) {
         LocalDateTime now = LocalDateTime.now();
 
         boolean dateProvided = request.date() != null && !request.date().isBlank();
@@ -54,11 +55,11 @@ public class LogListUseCase {
 
         return logs.stream()
                 .sorted(Comparator.comparing(Log::date).thenComparing(Log::hour))
-                .map(log -> LogListResponse.builder()
+                .map(log -> LogResponse.builder()
                         .id(log.id())
-                        .uploaderId(log.uploader().id())
-                        .nickname(log.uploader().nickname())
-                        .profileImageUrl(log.uploader().profileImageUrl())
+                        .uploader(LogUploaderResponse.builder().id(log.uploader().id())
+                                .nickname(log.uploader().nickname())
+                                .profileImageUrl(log.uploader().profileImageUrl()).build())
                         .videoUrl(log.videoUrl())
                         .caption(log.caption())
                         .date(log.date())
