@@ -21,7 +21,7 @@ public class LogController {
     private final LogCreateCase createCase;
     private final LogListUseCase listUseCase;
 
-    @PostMapping(value = "/video", consumes = "multipart/form-data")
+    @PostMapping(consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
     public LogCreateResponse createLog(@AuthenticationPrincipal UserDetail userDetail, @ModelAttribute LogCreateWebRequest request) {
         return createCase.logCreate(request.toApplication(userDetail));

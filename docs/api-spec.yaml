@@ -195,8 +195,6 @@ paths:
                   $ref: '#/components/schemas/LogListResponse'
         "400":
           description: 잘못된 날짜, hour 범위(0~23) 초과, 또는 date 없이 hour만 지정
-
-  /logs/video:
     post:
       tags: [Log]
       summary: 로그(영상) 생성
