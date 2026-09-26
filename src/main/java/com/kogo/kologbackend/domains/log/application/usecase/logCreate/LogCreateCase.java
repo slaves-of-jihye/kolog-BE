@@ -6,6 +6,8 @@ import com.kogo.kologbackend.domains.log.application.exception.VideoUploadExcept
 import com.kogo.kologbackend.domains.log.application.external.LogFileStorage;
 import com.kogo.kologbackend.domains.log.application.external.LogRepository;
 import com.kogo.kologbackend.domains.log.application.external.LogVideoValidator;
+import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateResponse;
 import com.kogo.kologbackend.domains.log.domain.Log;
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
 import lombok.RequiredArgsConstructor;

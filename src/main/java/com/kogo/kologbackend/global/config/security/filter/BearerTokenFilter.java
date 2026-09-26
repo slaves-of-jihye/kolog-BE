@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.global.config;
+package com.kogo.kologbackend.global.config.security.filter;
 
 import com.kogo.kologbackend.domains.user.application.external.AuthTokenProvider;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;

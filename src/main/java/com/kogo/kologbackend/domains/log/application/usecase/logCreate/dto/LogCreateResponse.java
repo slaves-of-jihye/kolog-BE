@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.log.application.usecase.logCreate;
+package com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto;
 
 import lombok.Builder;
 

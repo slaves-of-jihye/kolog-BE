@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.user.infrastructure;
+package com.kogo.kologbackend.domains.user.infrastructure.adapter;
 
 import com.kogo.kologbackend.domains.user.application.external.AuthTokenProvider;
 import com.kogo.kologbackend.domains.user.application.external.dto.RefreshToken;

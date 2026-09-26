@@ -2,9 +2,9 @@ package com.kogo.kologbackend.domains.log.web;
 
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.external.dto.RefreshToken;
-import com.kogo.kologbackend.domains.user.infrastructure.JwtAuthTokenProvider;
-import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
-import com.kogo.kologbackend.domains.user.infrastructure.UserJpaRepository;
+import com.kogo.kologbackend.domains.user.infrastructure.adapter.JwtAuthTokenProvider;
+import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserJpaEntity;
+import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserJpaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;

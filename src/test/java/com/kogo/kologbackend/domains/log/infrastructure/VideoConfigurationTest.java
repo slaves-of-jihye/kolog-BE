@@ -1,6 +1,8 @@
 package com.kogo.kologbackend.domains.log.infrastructure;
 
-import com.kogo.kologbackend.domains.user.infrastructure.JwtAuthTokenProvider;
+import com.kogo.kologbackend.domains.log.infrastructure.adapter.VideoFileStorage;
+import com.kogo.kologbackend.domains.user.infrastructure.adapter.JwtAuthTokenProvider;
+import com.kogo.kologbackend.global.config.web.ResourcesConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -16,7 +18,7 @@ class VideoConfigurationTest {
 
     private ApplicationContextRunner context(String uploadDir, String serverUrl) {
         return new ApplicationContextRunner()
-                .withUserConfiguration(VideoFileStorage.class, VideoResourceConfig.class, JwtAuthTokenProvider.class)
+                .withUserConfiguration(VideoFileStorage.class, ResourcesConfig.class, JwtAuthTokenProvider.class)
                 .withPropertyValues("file.upload-dir=" + uploadDir, "file.server-url=" + serverUrl,
                         "jwt.secret.access-token=access-token-secret-with-at-least-32-bytes",
                         "jwt.secret.refresh-token=refresh-token-secret-with-at-least-32-bytes");

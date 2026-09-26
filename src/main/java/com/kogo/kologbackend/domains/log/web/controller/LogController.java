@@ -1,8 +1,8 @@
-package com.kogo.kologbackend.domains.log.web;
+package com.kogo.kologbackend.domains.log.web.controller;
 
 import com.kogo.kologbackend.domains.log.application.usecase.logCreate.LogCreateCase;
-import com.kogo.kologbackend.domains.log.application.usecase.logCreate.LogCreateResponse;
-import com.kogo.kologbackend.domains.log.web.dto.LogCreateWebRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateResponse;
+import com.kogo.kologbackend.domains.log.web.controller.dto.LogCreateWebRequest;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

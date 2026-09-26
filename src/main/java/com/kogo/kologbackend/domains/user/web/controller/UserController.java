@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.user.web;
+package com.kogo.kologbackend.domains.user.web.controller;
 
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserLoginRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserLoginUseCase;

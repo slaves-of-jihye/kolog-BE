@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.user.infrastructure;
+package com.kogo.kologbackend.domains.user.infrastructure.jpa;
 
 import com.kogo.kologbackend.domains.user.domain.User;
 

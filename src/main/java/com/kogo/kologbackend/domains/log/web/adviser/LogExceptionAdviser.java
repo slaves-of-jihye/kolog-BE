@@ -1,9 +1,10 @@
-package com.kogo.kologbackend.domains.log.web;
+package com.kogo.kologbackend.domains.log.web.adviser;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
+import com.kogo.kologbackend.domains.log.web.controller.LogController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

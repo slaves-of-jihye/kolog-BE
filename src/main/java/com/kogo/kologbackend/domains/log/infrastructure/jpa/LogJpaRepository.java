@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.log.infrastructure;
+package com.kogo.kologbackend.domains.log.infrastructure.jpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,7 +1,10 @@
-package com.kogo.kologbackend.domains.user.infrastructure;
+package com.kogo.kologbackend.domains.user.infrastructure.adapter;
 
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
 import com.kogo.kologbackend.domains.user.domain.User;
+import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserJpaEntity;
+import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserJpaRepository;
+import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class UserRepositoryImpl implements UserRepository {
+public class UserRepositoryAdapter implements UserRepository {
     private final UserJpaRepository repository;
 
     @Override

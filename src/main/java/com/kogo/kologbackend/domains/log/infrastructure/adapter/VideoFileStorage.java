@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.log.infrastructure;
+package com.kogo.kologbackend.domains.log.infrastructure.adapter;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
@@ -46,10 +46,6 @@ public class VideoFileStorage implements LogFileStorage {
             throw new IllegalArgumentException("file.server-url must be an HTTP URL.");
         }
         this.serverUrl = url.toString().replaceAll("/+$", "");
-    }
-
-    Path directory() {
-        return directory;
     }
 
     @Override

@@ -1,6 +1,7 @@
-package com.kogo.kologbackend.global.config;
+package com.kogo.kologbackend.global.config.security;
 
-import com.kogo.kologbackend.domains.user.infrastructure.JwtAuthTokenProvider;
+import com.kogo.kologbackend.domains.user.infrastructure.adapter.JwtAuthTokenProvider;
+import com.kogo.kologbackend.global.config.security.filter.BearerTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;

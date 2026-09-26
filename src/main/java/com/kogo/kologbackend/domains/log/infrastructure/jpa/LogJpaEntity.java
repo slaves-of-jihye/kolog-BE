@@ -1,6 +1,6 @@
-package com.kogo.kologbackend.domains.log.infrastructure;
+package com.kogo.kologbackend.domains.log.infrastructure.jpa;
 
-import com.kogo.kologbackend.domains.user.infrastructure.UserJpaEntity;
+import com.kogo.kologbackend.domains.user.infrastructure.jpa.UserJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

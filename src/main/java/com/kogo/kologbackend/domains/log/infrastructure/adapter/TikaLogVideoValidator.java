@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.log.infrastructure;
+package com.kogo.kologbackend.domains.log.infrastructure.adapter;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.external.LogVideoValidator;
