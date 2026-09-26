@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/logs/video").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(

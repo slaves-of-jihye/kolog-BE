@@ -63,8 +63,8 @@ paths:
       tags: [User]
       summary: 내 토큰 정보 조회
       description: >
-        Authorization: Bearer {token} 헤더에서 토큰 추출 → JWT 서명 검증 및 디코딩 →
-        클레임(subject/발급시각/만료시각)을 그대로 DTO에 담아 반환
+        Authorization: Bearer {token} 헤더에서 토큰 추출 → JWT 검증 후 사용자 ID 확인 →
+        유저 조회(없으면 404) → id/nickname/profileImageUrl 반환
       parameters:
         - name: Authorization
           in: header
@@ -74,11 +74,15 @@ paths:
             example: "Bearer eyJhbGciOi..."
       responses:
         "200":
-          description: 토큰 클레임
+          description: 내 프로필 조회 성공
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMeResponse'
+        "401":
+          description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
+        "404":
+          description: 토큰의 사용자를 찾을 수 없음
 
   /users/{userId}/profile:
     get:
@@ -408,15 +412,14 @@ components:
     UserMeResponse:
       type: object
       properties:
-        userId:
+        id:
           type: integer
           format: int64
-        issuedAt:
+        nickname:
           type: string
-          format: date-time
-        expiration:
+        profileImageUrl:
           type: string
-          format: date-time
+          nullable: true
 
     UserProfileResponse:
       type: object
