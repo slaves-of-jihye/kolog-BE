@@ -1,5 +1,6 @@
 package com.kogo.kologbackend.domains.log.application.usecase.logCreate;
 
+import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import lombok.Builder;
 
 import java.io.InputStream;
@@ -10,5 +11,5 @@ public record LogCreateRequest(
         String caption,
         String date,
         Integer hour,
-        Long uploaderId
+        UserDetail uploader
 ) {}

@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 public class UserController {
-    private static final String BEARER_PREFIX = "Bearer ";
-
     private final UserSignupUseCase userSignupUseCase;
     private final UserLoginUseCase userLoginUseCase;
 

@@ -2,6 +2,7 @@ package com.kogo.kologbackend.domains.log.application.usecase.logCreate;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
+import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
 import com.kogo.kologbackend.domains.log.application.external.LogFileStorage;
 import com.kogo.kologbackend.domains.log.application.external.LogRepository;
 import com.kogo.kologbackend.domains.log.application.external.LogVideoValidator;
@@ -25,23 +26,25 @@ public class LogCreateCase {
     private final LogFileStorage files;
 
     @Transactional
-    public LogCreateResponse logCreate(LogCreateRequest request) throws IOException {
-        var user = users.findById(request.uploaderId())
-                .orElseThrow(LogUserNotFoundException::new);
-        LocalDate date;
-        try {
-            date = LocalDate.parse(request.date());
-        } catch (DateTimeParseException | NullPointerException e) {
-            throw new InvalidLogDateException();
+    public LogCreateResponse logCreate(LogCreateRequest request) {
+        try (BufferedInputStream video = new BufferedInputStream(request.videoFile())) {
+            var user = users.findById(request.uploader().userId())
+                    .orElseThrow(LogUserNotFoundException::new);
+            LocalDate date;
+            try {
+                date = LocalDate.parse(request.date());
+            } catch (DateTimeParseException | NullPointerException e) {
+                throw new InvalidLogDateException();
+            }
+
+            String mediaType = videoValidator.detectSupportedMediaType(video);
+            String videoUrl = files.storeVideo(video, mediaType);
+            Log saved = logRepository.save(new Log(null, videoUrl, request.caption(), date, request.hour(), user));
+            return LogCreateResponse.builder().id(saved.id()).videoUrl(saved.videoUrl())
+                    .caption(saved.caption()).date(saved.date()).hour(saved.hour())
+                    .uploaderId(user.id()).build();
+        } catch (IOException e) {
+            throw new VideoUploadException("Failed to read or close the uploaded video.", e);
         }
-
-        BufferedInputStream video = new BufferedInputStream(request.videoFile());
-        String mediaType = videoValidator.detectSupportedMediaType(video);
-
-        String videoUrl = files.storeVideo(video, mediaType);
-        Log saved = logRepository.save(new Log(null, videoUrl, request.caption(), date, request.hour(), user));
-        return LogCreateResponse.builder().id(saved.id()).videoUrl(saved.videoUrl())
-                .caption(saved.caption()).date(saved.date()).hour(saved.hour())
-                .uploaderId(user.id()).build();
     }
 }

@@ -1,8 +1,9 @@
 package com.kogo.kologbackend.domains.user.infrastructure;
 
 import com.kogo.kologbackend.domains.user.application.external.AuthTokenProvider;
-import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.external.dto.RefreshToken;
+import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -69,13 +70,17 @@ public class JwtAuthTokenProvider implements AuthTokenProvider {
                 .compact();
     }
 
-    public Long accessTokenUserId(String jwt) {
-        return Long.valueOf(Jwts.parser()
+    @Override
+    public UserDetail accessTokenUserDetail(String jwt) {
+        Claims claims = Jwts.parser()
                 .verifyWith(accessSigningKey)
                 .build()
                 .parseSignedClaims(jwt)
-                .getPayload()
-                .getSubject());
+                .getPayload();
+
+        return UserDetail.builder()
+                .userId(Long.valueOf(claims.getSubject()))
+                .build();
     }
 
 

@@ -5,6 +5,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Path;
+
 @Configuration
 public class VideoResourceConfig implements WebMvcConfigurer {
     private final Path directory;
