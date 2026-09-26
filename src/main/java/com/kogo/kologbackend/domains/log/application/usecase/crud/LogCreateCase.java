@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.log.application.usecase.logCreate;
+package com.kogo.kologbackend.domains.log.application.usecase.crud;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
@@ -6,9 +6,8 @@ import com.kogo.kologbackend.domains.log.application.exception.VideoUploadExcept
 import com.kogo.kologbackend.domains.log.application.external.LogFileStorage;
 import com.kogo.kologbackend.domains.log.application.external.LogRepository;
 import com.kogo.kologbackend.domains.log.application.external.LogVideoValidator;
-import com.kogo.kologbackend.domains.log.application.usecase.dto.LogResponse;
-import com.kogo.kologbackend.domains.log.application.usecase.dto.LogUploaderResponse;
-import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.response.LogResponse;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.domains.log.domain.Log;
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,11 +42,7 @@ public class LogCreateCase {
             String mediaType = videoValidator.detectSupportedMediaType(video);
             String videoUrl = files.storeVideo(video, mediaType);
             Log saved = logRepository.save(new Log(null, videoUrl, request.caption(), date, request.hour(), user));
-            return LogResponse.builder().id(saved.id()).videoUrl(saved.videoUrl())
-                    .caption(saved.caption()).date(saved.date()).hour(saved.hour())
-                    .uploader(LogUploaderResponse.builder().id(user.id())
-                            .nickname(user.nickname()).profileImageUrl(user.profileImageUrl()).build())
-                    .build();
+            return LogResponse.from(saved);
         } catch (IOException e) {
             throw new VideoUploadException("Failed to read or close the uploaded video.", e);
         }

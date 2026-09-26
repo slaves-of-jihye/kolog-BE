@@ -255,12 +255,12 @@ paths:
                 $ref: '#/components/schemas/LogResponse'
         "404":
           description: 로그를 찾을 수 없음
-
-  /logs/{logId}/caption:
     patch:
       tags: [Log]
-      summary: 로그 캡션 수정
-      description: 로그 조회(없으면 404) → 요청자가 작성자인지 확인(아니면 예외) → 캡션 수정
+      summary: 로그 수정 (영상/캡션)
+      description: >
+        로그 조회(없으면 404) → 요청자가 작성자인지 확인(아니면 403) →
+        전달된 영상과 캡션 중 있는 값만 수정. 영상 교체 시 이전 영상 파일은 커밋 후 삭제
       parameters:
         - name: logId
           in: path
@@ -268,25 +268,33 @@ paths:
           schema:
             type: integer
             format: int64
-        - name: userId
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/LogCaptionUpdateRequest'
+              type: object
+              properties:
+                caption:
+                  type: string
+                videoFile:
+                  type: string
+                  format: binary
       responses:
         "200":
-          description: 캡션 수정 성공
+          description: 수정 성공
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogCaptionUpdateResponse'
+                $ref: '#/components/schemas/LogResponse'
+        "400":
+          description: caption과 videoFile 모두 없거나 지원하지 않는 영상 형식
+        "401":
+          description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
+        "403":
+          description: 본인이 작성한 로그가 아님
+        "404":
+          description: 로그를 찾을 수 없음
 
   /logs/hours:
     get:
@@ -552,24 +560,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LogGetByHourResponse'
-
-    LogCaptionUpdateRequest:
-      type: object
-      properties:
-        caption:
-          type: string
-
-    LogCaptionUpdateResponse:
-      type: object
-      properties:
-        logId:
-          type: integer
-          format: int64
-        caption:
-          type: string
-        updatedAt:
-          type: string
-          format: date-time
 
     LogGetHourList:
       type: object

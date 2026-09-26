@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.user.application.usecase.auth.dto;
+package com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response;
 
 import lombok.Builder;
 

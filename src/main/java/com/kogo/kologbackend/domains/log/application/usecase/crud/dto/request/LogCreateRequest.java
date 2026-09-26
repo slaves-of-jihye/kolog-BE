@@ -1,4 +1,4 @@
-package com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto;
+package com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request;
 
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import lombok.Builder;

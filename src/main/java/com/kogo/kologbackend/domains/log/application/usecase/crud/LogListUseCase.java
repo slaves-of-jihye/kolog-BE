@@ -1,12 +1,11 @@
-package com.kogo.kologbackend.domains.log.application.usecase.logList;
+package com.kogo.kologbackend.domains.log.application.usecase.crud;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogHourException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogQueryException;
 import com.kogo.kologbackend.domains.log.application.external.LogRepository;
-import com.kogo.kologbackend.domains.log.application.usecase.dto.LogResponse;
-import com.kogo.kologbackend.domains.log.application.usecase.dto.LogUploaderResponse;
-import com.kogo.kologbackend.domains.log.application.usecase.logList.dto.LogListRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.response.LogResponse;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request.LogListRequest;
 import com.kogo.kologbackend.domains.log.domain.Log;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,16 +54,7 @@ public class LogListUseCase {
 
         return logs.stream()
                 .sorted(Comparator.comparing(Log::date).thenComparing(Log::hour))
-                .map(log -> LogResponse.builder()
-                        .id(log.id())
-                        .uploader(LogUploaderResponse.builder().id(log.uploader().id())
-                                .nickname(log.uploader().nickname())
-                                .profileImageUrl(log.uploader().profileImageUrl()).build())
-                        .videoUrl(log.videoUrl())
-                        .caption(log.caption())
-                        .date(log.date())
-                        .hour(log.hour())
-                        .build())
+                .map(LogResponse::from)
                 .toList();
     }
 }

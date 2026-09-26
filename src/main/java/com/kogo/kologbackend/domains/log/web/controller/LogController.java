@@ -1,11 +1,13 @@
 package com.kogo.kologbackend.domains.log.web.controller;
 
-import com.kogo.kologbackend.domains.log.application.usecase.dto.LogResponse;
-import com.kogo.kologbackend.domains.log.application.usecase.logCreate.LogCreateCase;
-import com.kogo.kologbackend.domains.log.application.usecase.logGet.LogGetUseCase;
-import com.kogo.kologbackend.domains.log.application.usecase.logList.LogListUseCase;
-import com.kogo.kologbackend.domains.log.application.usecase.logList.dto.LogListRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.response.LogResponse;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.LogCreateCase;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.LogGetUseCase;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.LogListUseCase;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request.LogListRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.LogUpdateUseCase;
 import com.kogo.kologbackend.domains.log.web.controller.dto.LogCreateWebRequest;
+import com.kogo.kologbackend.domains.log.web.controller.dto.LogUpdateWebRequest;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ public class LogController {
     private final LogCreateCase createCase;
     private final LogListUseCase listUseCase;
     private final LogGetUseCase getUseCase;
+    private final LogUpdateUseCase updateUseCase;
 
     @PostMapping(consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
@@ -36,6 +39,12 @@ public class LogController {
     @GetMapping("/{logId}")
     public LogResponse getLog(@PathVariable Long logId) {
         return getUseCase.get(logId);
+    }
+
+    @PatchMapping(value = "/{logId}", consumes = "multipart/form-data")
+    public LogResponse updateLog(@AuthenticationPrincipal UserDetail userDetail, @PathVariable Long logId,
+                                 @ModelAttribute LogUpdateWebRequest request) {
+        return updateUseCase.update(request.toApplication(logId, userDetail));
     }
 
 }

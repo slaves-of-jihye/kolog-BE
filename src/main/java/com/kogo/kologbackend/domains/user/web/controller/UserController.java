@@ -1,9 +1,9 @@
 package com.kogo.kologbackend.domains.user.web.controller;
 
-import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserLoginRequest;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.UserLoginRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserLoginUseCase;
-import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserSignupRequest;
-import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.UserSignupRequest;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response.UserAuthResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.UserGetUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.UserMeUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.dto.UserResponse;

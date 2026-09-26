@@ -132,4 +132,35 @@ public class VideoFileStorage implements LogFileStorage {
         });
         return serverUrl + "/resources/" + target.getFileName();
     }
+
+    @Override
+    public void deleteVideo(String videoUrl) {
+        String prefix = serverUrl + "/resources/";
+        if (videoUrl == null || !videoUrl.startsWith(prefix)) {
+            return;
+        }
+        String filename = videoUrl.substring(prefix.length());
+        Path target = directory.resolve(filename).normalize();
+        if (!directory.equals(target.getParent()) || !target.getFileName().toString().equals(filename)) {
+            return;
+        }
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    deleteQuietly(target);
+                }
+            });
+        } else {
+            deleteQuietly(target);
+        }
+    }
+
+    private void deleteQuietly(Path target) {
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException ignored) {
+            // Filesystem cleanup failure must not affect an already-committed database update.
+        }
+    }
 }

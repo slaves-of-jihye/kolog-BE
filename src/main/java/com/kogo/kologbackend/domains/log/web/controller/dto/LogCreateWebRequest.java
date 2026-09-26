@@ -2,7 +2,7 @@ package com.kogo.kologbackend.domains.log.web.controller.dto;
 
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
-import com.kogo.kologbackend.domains.log.application.usecase.logCreate.dto.LogCreateRequest;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request.LogCreateRequest;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import lombok.Builder;
 import org.springframework.web.multipart.MultipartFile;

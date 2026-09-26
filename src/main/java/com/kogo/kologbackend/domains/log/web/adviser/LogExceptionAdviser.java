@@ -3,8 +3,10 @@ package com.kogo.kologbackend.domains.log.web.adviser;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogDateException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogHourException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogQueryException;
+import com.kogo.kologbackend.domains.log.application.exception.InvalidLogUpdateException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.LogNotFoundException;
+import com.kogo.kologbackend.domains.log.application.exception.LogUpdateForbiddenException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
 import com.kogo.kologbackend.domains.log.web.controller.LogController;
@@ -35,6 +37,11 @@ public class LogExceptionAdviser {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
+    @ExceptionHandler(InvalidLogUpdateException.class)
+    public ProblemDetail invalidUpdate(InvalidLogUpdateException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
     @ExceptionHandler(LogUserNotFoundException.class)
     public ProblemDetail missingUser(LogUserNotFoundException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -43,6 +50,11 @@ public class LogExceptionAdviser {
     @ExceptionHandler(LogNotFoundException.class)
     public ProblemDetail logNotFound(LogNotFoundException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(LogUpdateForbiddenException.class)
+    public ProblemDetail updateForbidden(LogUpdateForbiddenException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
     }
 
     @ExceptionHandler(VideoUploadException.class)

@@ -5,8 +5,8 @@ import com.kogo.kologbackend.domains.user.application.external.AuthTokenProvider
 import com.kogo.kologbackend.domains.user.application.external.UserRepository;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.external.dto.RefreshToken;
-import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserSignupRequest;
-import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.UserSignupRequest;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response.UserAuthResponse;
 import com.kogo.kologbackend.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -4,4 +4,5 @@ import java.io.InputStream;
 
 public interface LogFileStorage {
     String storeVideo(InputStream stream, String mediaType);
+    void deleteVideo(String videoUrl);
 }
