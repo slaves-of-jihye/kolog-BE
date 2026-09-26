@@ -318,43 +318,6 @@ paths:
         "404":
           description: 로그를 찾을 수 없음
 
-  /logs/hours:
-    get:
-      tags: [Log]
-      summary: 전체 로그 시간대 목록 조회
-      description: 전체 로그를 날짜별로 그룹핑해 시간대 목록 구성
-      responses:
-        "200":
-          description: 조회 성공
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LogGetHourList'
-
-  /logs/delete/{logId}:
-    delete:
-      tags: [Log]
-      summary: 로그 삭제
-      description: 로그 조회(없으면 404) → 요청자가 작성자인지 확인(아니면 예외) → 로그 삭제 및 영상 파일 삭제
-      parameters:
-        - name: logId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: userId
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "204":
-          description: 삭제 성공 (본문 없음)
-
   /video/chat:
     post:
       tags: [Chat]
@@ -496,18 +459,6 @@ components:
         email:
           type: string
 
-    LogUploaderResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        nickname:
-          type: string
-        profileImageUrl:
-          type: string
-          nullable: true
-
     LogResponse:
       type: object
       properties:
@@ -515,7 +466,7 @@ components:
           type: integer
           format: int64
         uploader:
-          $ref: '#/components/schemas/LogUploaderResponse'
+          $ref: '#/components/schemas/UserMeResponse'
         videoUrl:
           type: string
         caption:
@@ -582,16 +533,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LogGetByHourResponse'
-
-    LogGetHourList:
-      type: object
-      properties:
-        date:
-          type: string
-        hours:
-          type: array
-          items:
-            type: integer
 
     ChatCreateRequest:
       type: object
