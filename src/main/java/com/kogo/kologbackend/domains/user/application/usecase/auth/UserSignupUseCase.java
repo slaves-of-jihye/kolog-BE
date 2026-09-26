@@ -9,6 +9,7 @@ import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserSignu
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
 import com.kogo.kologbackend.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class UserSignupUseCase {
     private final UserRepository repository;
     private final AuthTokenProvider authTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     public UserAuthResponse signup(UserSignupRequest request) {
         if (repository.existsByEmail(request.email())) {
@@ -25,7 +27,7 @@ public class UserSignupUseCase {
         User user = new User(
                 null,
                 request.email(),
-                request.password(),
+                passwordEncoder.encode(request.password()),
                 request.nickname(),
                 null
         );

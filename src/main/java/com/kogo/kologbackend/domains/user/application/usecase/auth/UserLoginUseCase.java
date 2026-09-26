@@ -9,6 +9,7 @@ import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthR
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserLoginRequest;
 import com.kogo.kologbackend.domains.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,12 +17,13 @@ import org.springframework.stereotype.Service;
 public class UserLoginUseCase {
     private final UserRepository repository;
     private final AuthTokenProvider authTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     public UserAuthResponse login(UserLoginRequest request) {
         User user = repository.findByEmail(request.email())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!user.password().equals(request.password())) {
+        if (!passwordEncoder.matches(request.password(), user.password())) {
             throw new InvalidCredentialsException();
         }
 
