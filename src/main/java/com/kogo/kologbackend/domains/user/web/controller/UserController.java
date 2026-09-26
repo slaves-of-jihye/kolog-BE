@@ -4,8 +4,8 @@ import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserLogin
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserLoginUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserSignupRequest;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.UserAuthResponse;
-import com.kogo.kologbackend.domains.user.application.usecase.me.UserMeUseCase;
-import com.kogo.kologbackend.domains.user.application.usecase.me.dto.UserMeResponse;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.UserMeUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.dto.UserResponse;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserSignupUseCase;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class UserController {
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
-    public UserMeResponse me(@AuthenticationPrincipal UserDetail userDetail) {
+    public UserResponse me(@AuthenticationPrincipal UserDetail userDetail) {
         return userMeUseCase.me(userDetail);
     }
 }
