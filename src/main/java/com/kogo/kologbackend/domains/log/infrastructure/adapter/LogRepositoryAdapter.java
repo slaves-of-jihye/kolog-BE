@@ -39,4 +39,9 @@ public class LogRepositoryAdapter implements LogRepository {
         return logs.findByDate(date).stream().map(LogMapper::toDomain).toList();
     }
 
+    @Override
+    public void deleteById(Long id) {
+        logs.deleteById(id);
+    }
+
 }

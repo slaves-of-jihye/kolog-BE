@@ -6,6 +6,7 @@ import com.kogo.kologbackend.domains.log.application.exception.InvalidLogQueryEx
 import com.kogo.kologbackend.domains.log.application.exception.InvalidLogUpdateException;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.LogNotFoundException;
+import com.kogo.kologbackend.domains.log.application.exception.LogDeleteForbiddenException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUpdateForbiddenException;
 import com.kogo.kologbackend.domains.log.application.exception.LogUserNotFoundException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
@@ -54,6 +55,11 @@ public class LogExceptionAdviser {
 
     @ExceptionHandler(LogUpdateForbiddenException.class)
     public ProblemDetail updateForbidden(LogUpdateForbiddenException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+    }
+
+    @ExceptionHandler(LogDeleteForbiddenException.class)
+    public ProblemDetail deleteForbidden(LogDeleteForbiddenException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
     }
 

@@ -11,4 +11,5 @@ public interface LogRepository {
     Optional<Log> findById(Long id);
     List<Log> findByDateAndHour(LocalDate date, Integer hour);
     List<Log> findByDate(LocalDate date);
+    void deleteById(Long id);
 }

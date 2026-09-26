@@ -6,6 +6,8 @@ import com.kogo.kologbackend.domains.log.application.usecase.crud.LogGetUseCase;
 import com.kogo.kologbackend.domains.log.application.usecase.crud.LogListUseCase;
 import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request.LogListRequest;
 import com.kogo.kologbackend.domains.log.application.usecase.crud.LogUpdateUseCase;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.LogDeleteUseCase;
+import com.kogo.kologbackend.domains.log.application.usecase.crud.dto.request.LogDeleteRequest;
 import com.kogo.kologbackend.domains.log.web.controller.dto.LogCreateWebRequest;
 import com.kogo.kologbackend.domains.log.web.controller.dto.LogUpdateWebRequest;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
@@ -24,6 +26,7 @@ public class LogController {
     private final LogListUseCase listUseCase;
     private final LogGetUseCase getUseCase;
     private final LogUpdateUseCase updateUseCase;
+    private final LogDeleteUseCase deleteUseCase;
 
     @PostMapping(consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
@@ -45,6 +48,12 @@ public class LogController {
     public LogResponse updateLog(@AuthenticationPrincipal UserDetail userDetail, @PathVariable Long logId,
                                  @ModelAttribute LogUpdateWebRequest request) {
         return updateUseCase.update(request.toApplication(logId, userDetail));
+    }
+
+    @DeleteMapping("/{logId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteLog(@AuthenticationPrincipal UserDetail userDetail, @PathVariable Long logId) {
+        deleteUseCase.delete(LogDeleteRequest.builder().logId(logId).requester(userDetail).build());
     }
 
 }

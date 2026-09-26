@@ -295,6 +295,28 @@ paths:
           description: 본인이 작성한 로그가 아님
         "404":
           description: 로그를 찾을 수 없음
+    delete:
+      tags: [Log]
+      summary: 로그 삭제
+      description: >
+        로그 조회(없으면 404) → 요청자가 작성자인지 확인(아니면 403) →
+        로그 삭제. 영상 파일은 커밋 후 삭제
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: 삭제 성공
+        "401":
+          description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
+        "403":
+          description: 본인이 작성한 로그가 아님
+        "404":
+          description: 로그를 찾을 수 없음
 
   /logs/hours:
     get:
