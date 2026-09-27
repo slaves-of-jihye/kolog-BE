@@ -53,6 +53,7 @@ public class LogListUseCase {
         }
 
         return logs.stream()
+                .filter(log -> request.userId() == null || log.uploader().id().equals(request.userId()))
                 .sorted(Comparator.comparing(Log::date).thenComparing(Log::hour))
                 .map(LogResponse::from)
                 .toList();

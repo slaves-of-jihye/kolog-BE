@@ -183,6 +183,16 @@ global/
   `InvalidProfileUpdateException`(400)을 던지고, 이미지 형식 검증은 `UserProfileImageValidator`(Tika 기반,
   `LogVideoValidator`와 대칭)가 맡는다.
 
+### 14. `GET /logs`의 `userId`는 서버 단 필터일 뿐이다 — 없으면 그 date·hour의 전체 로그
+- `LogListRequest.userId`(nullable)가 지정되면 `LogListUseCase.list`가 date/hour로 가져온 목록을
+  `log.uploader().id().equals(userId)`로 걸러낸다. 생략하면 필터링 없이 기존 동작(그 date·hour의 모든
+  유저 로그) 그대로다 — 프런트가 "우리반 전체" 조회와 "내 로그만" 조회를 같은 엔드포인트로 표현할 수
+  있게 하기 위함(별도 `/logs/mine` 같은 엔드포인트를 새로 만들지 않았다).
+- 리포지토리에 새 쿼리 메서드(`findByDateAndHourAndUploaderId` 등)를 추가하지 않고 기존
+  `findByDate`/`findByDateAndHour` 결과에 애플리케이션 레벨 스트림 필터를 얹었다 — 그룹 하나의 로그
+  수가 애초에 적어서(반 단위) DB 레벨 인덱스가 필요할 규모가 아니기 때문. 규모가 커지면 그때 리포지토리
+  메서드로 내려도 된다.
+
 ## 피해야 할 안티패턴
 
 - **공통 HTTP 예외 계층 부활 금지**: `global/exception` 같은 패키지에 상태코드 아는 부모 예외를 다시 만들지 않는다.

@@ -5,5 +5,6 @@ import lombok.Builder;
 @Builder
 public record LogListRequest(
         String date,
-        Integer hour
+        Integer hour,
+        Long userId
 ) {}

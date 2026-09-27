@@ -35,8 +35,10 @@ public class LogController {
     }
 
     @GetMapping
-    public List<LogResponse> listLogs(@RequestParam(required = false) String date, @RequestParam(required = false) Integer hour) {
-        return listUseCase.list(LogListRequest.builder().date(date).hour(hour).build());
+    public List<LogResponse> listLogs(@RequestParam(required = false) String date,
+                                       @RequestParam(required = false) Integer hour,
+                                       @RequestParam(required = false) Long userId) {
+        return listUseCase.list(LogListRequest.builder().date(date).hour(hour).userId(userId).build());
     }
 
     @GetMapping("/{logId}")
