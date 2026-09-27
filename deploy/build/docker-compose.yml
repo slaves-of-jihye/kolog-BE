@@ -2,7 +2,7 @@ services:
   kolog-backend:
     build:
       context: ../..
-      dockerfile: external/build/Dockerfile
+      dockerfile: deploy/build/Dockerfile
     image: kolog-be:latest
     container_name: kolog-be-app
     depends_on:

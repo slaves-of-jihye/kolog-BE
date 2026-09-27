@@ -39,5 +39,5 @@ out/
 # Security / Credentials
 .env
 *.env
-!external/build/.env
+!deploy/build/.env
 .DS_Store
