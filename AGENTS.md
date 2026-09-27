@@ -129,6 +129,21 @@ global/
   통일했다(도메인 레코드/`EmotionJpaEntity`/`EmotionCreateRequest`/`EmotionCreateWebRequest`/`EmotionResponse`/
   `EmotionMapper`/`EmotionCreateUseCase`/예외 메시지/`docs/api-spec.yaml` 전부 동시에 고쳐야 한다).
 
+### 11. 인증은 화이트리스트 방식 — signup/login만 예외, 나머지는 전부 `authenticated()`
+- `SecurityConfig.authorizeHttpRequests`는 엔드포인트를 하나씩 나열해 `authenticated()`를 붙이지 않는다.
+  `POST /api/v1/users/signup`, `POST /api/v1/users/login`만 `permitAll()`이고 나머지는
+  `anyRequest().authenticated()`다. 새 컨트롤러/엔드포인트를 추가해도 `SecurityConfig`를 따로 안 건드려야
+  기본적으로 인증이 걸린다 — 공개 API가 필요하면 signup/login 옆에 명시적으로 추가한다.
+- CORS 허용 origin은 `APP_CORS_ALLOWED_ORIGINS` 환경변수(`app.cors.allowed-origins` 프로퍼티)로 설정한다.
+  콤마로 여러 개 지정 가능(`http://localhost:3000,https://kolog.example.com`), `SecurityConfig`의
+  `parseAllowedOrigins`가 트림·공백 제거 후 `setAllowedOriginPatterns`에 넣는다. 하드코딩된 `"*"` 패턴을
+  쓰지 않는다.
+- 값 자체가 없으면(`APP_CORS_ALLOWED_ORIGINS` 미설정) 프로퍼티 플레이스홀더 해석 실패로 기동이 죽는다.
+  값이 빈 문자열이거나 콤마/공백뿐이면(파싱 결과가 빈 리스트) `SecurityConfig.validateAllowedOrigins`
+  (`@PostConstruct`)가 `IllegalStateException`을 던져 기동을 막는다 — JWT 시크릿 검증과 같은 이유
+  (규칙 "시크릿/설정 기본값 은닉 금지"): 빈 CORS 설정을 조용히 통과시키면 모든 브라우저 크로스오리진
+  요청이 이유 없이 403으로 막히는 걸 배포 후에나 알게 된다.
+
 ## 피해야 할 안티패턴
 
 - **공통 HTTP 예외 계층 부활 금지**: `global/exception` 같은 패키지에 상태코드 아는 부모 예외를 다시 만들지 않는다.
@@ -146,8 +161,5 @@ global/
 
 - 로컬 컨테이너: `docker compose --env-file deploy/env/.env -f deploy/build/docker-compose.yml up -d --build`.
   백엔드 코드를 고치면 반드시 재빌드 후 실제로 컨테이너가 최신 상태인지 확인하고 나서 "적용됨"이라 말한다.
-  (주의: `deploy/build/docker-compose.yml`의 `dockerfile: ../build/Dockerfile` 경로가 `context`(`../..`) 기준으로
-  잘못 풀려 `--build`가 실패하는 버그가 있었다 — 우회하려면 `docker build -t kolog-be:latest -f deploy/build/Dockerfile .`로
-  직접 이미지를 만든 뒤 `--build` 없이 `up -d`한다.)
 - 동작 검증은 실제 HTTP 스모크 테스트(가입→토큰→호출)로 하고, 만든 임시 계정/로그/업로드 파일은 검증 후 삭제한다.
 - 명시적 요청이 없으면 새 테스트 파일을 만들지 않는다. 회귀 검증이 필요하면 일회성 스크립트나 기존 자동화 테스트 스위트(`./gradlew test`)로 확인한다.
