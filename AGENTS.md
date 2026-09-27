@@ -84,39 +84,50 @@ global/
 ### 9. API가 바뀌면 `docs/api-spec.yaml`을 같은 작업 안에서 갱신한다
 - 엔드포인트를 추가/변경/삭제하면(경로, 메서드, 요청/응답 바디, 상태 코드) **그 자리에서** `docs/api-spec.yaml`도 함께 고친다. 나중으로 미루지 않는다.
 - 실제로 구현되지 않았거나 삭제된 엔드포인트를 문서에만 남겨두지 않는다 — 문서와 컨트롤러가 어긋나면 문서 쪽을 실제 코드에 맞춰 고친다.
-- 예외: `Emotion` 태그의 `/video/emotion`은 **아직 구현 전이지만 곧 만들 기능이라 의도적으로 남겨둔 자리표시자**다.
-  실제 구현 전까지는 지우지 않는다. `Comment`(`/logs/{logId}/comment`)는 이미 구현됐으니 더는 자리표시자가 아니다.
+- 지금은 문서에만 있고 실제로 구현 안 된 엔드포인트를 의도적으로 남겨두는 경우가 없다 —
+  `Chat`/`Emotion` 둘 다 자리표시자였다가 `Comment`/`Emotion`으로 실제 구현되면서 정리됐다.
+  새로 그런 자리표시자를 남기게 되면 여기 그 이유와 태그를 적어 둔다.
 
-### 10. `Comment`는 작성자를 `user` 도메인의 `User`를 그대로 소유한다 — comment 전용 축약 타입을 만들지 않는다
-- `Comment(id, content, logId, author: User)` — 처음엔 `CommentAuthor(id, nickname, profileImageUrl)`라는
-  comment 전용 값 객체를 도메인 레코드에 뒀었는데, 이건 규칙 8이 응답 DTO에 대해 말하는 것과 같은 이유로
-  도메인 레벨에서도 **잘못된 중복**이었다 — `user` 도메인의 `User`를 그대로 쓰면 되는데 굳이 부분집합 타입을
-  또 만든 것. 지금은 `CommentMapper.toDomain`이 `UserMapper.toDomain(entity.getAuthor())`로 `User`를 그대로
-  만들어 넣는다.
-- **comment 전용 축약은 DTO(응답) 단에서만 필요하면 만든다** — 여기서는 그마저도 필요 없다: `CommentResponse.author`는
-  `user` 도메인의 기존 `UserResponse`를 그대로 쓴다(`UserResponse.from(comment.author())`). `LogResponse.uploader`도
-  마찬가지로 `UserResponse`를 재사용한다.
-- `CommentJpaEntity.author`가 `FetchType.EAGER`라서 `CommentMapper.toDomain`이 매핑 시점에 `User`를 바로
-  채워 넣을 수 있고, 그래서 응답을 만들 때(`CommentResponse.from(comment)`) 유스케이스가 별도로
-  `UserRepository`를 조회할 필요가 없다 — Chat을 처음 만들 때는 `authorId`만 갖고 다니다가 응답 조립
-  단계에서 `UserRepository.findAllById`로 다시 채워 넣었는데, 그 왕복을 없앤 결정이다.
-- **`CommentResponse`는 `logId`를 절대 담지 않는다** — 댓글은 항상 로그 응답 안(`LogResponse.comments`)처럼
-  로그 문맥 안에서만 노출되므로, 이미 아는 로그 id를 각 댓글마다 반복해서 돌려주지 않는다. 댓글 단독 목록
-  조회 API(`GET /logs/{logId}/comment`)는 만들지 않는다 — 로그를 조회하면 댓글이 필드로 같이 오므로
-  중복이라 없앴다.
-- **`Log` 도메인 레코드가 자기 댓글을 직접 소유한다** (`Log(id, videoUrl, caption, date, hour, uploader, comments:
-  List<Comment>)`) — 응답 조립 전용 별도 컴포넌트(`LogResponseFactory` 같은)를 두지 않는다. `LogRepositoryAdapter`
-  (log 도메인의 infra 계층)가 `CommentJpaRepository`/`CommentMapper`(comment 도메인)를 직접 주입받아, `Log`를
-  만들 때마다 그 로그의 댓글을 함께 채워 넣는다. 그래서 `LogResponse.from(log)`는 다시 순수 정적 매핑으로
-  끝난다(`log.comments()`를 그대로 `CommentResponse::from`으로 변환) — `LogCreateCase`/`LogGetUseCase`/
-  `LogListUseCase`/`LogUpdateUseCase`는 리포지토리 하나(`LogRepository`)만 갖고도 댓글까지 채워진 응답을 만든다.
-  도메인 레코드가 다른 도메인 레코드(`Comment`)를 직접 참조하는 것도, infra 계층이 다른 도메인의 JPA
-  리포지토리를 직접 참조하는 것도 허용된 이동이다 — "log가 조회될 때 댓글도 같이 온다"는 요구를 충족하는
-  가장 단순한 경로가 이거였다.
-- **로그를 지울 땐 그 로그의 댓글부터 지운다** — `comments.log_id` FK에 `ON DELETE CASCADE`가 없어서, 댓글이
-  하나라도 달린 로그를 그냥 `logs.deleteById(id)`만 호출하면 Hibernate가 flush 시점에
-  `TransientPropertyValueException`을 던지며 500이 난다(실제로 겪은 사고). `LogRepositoryAdapter.deleteById`가
-  `CommentJpaRepository.deleteByLog_Id(id)`로 댓글을 먼저 지운 다음 `logs.deleteById(id)`를 부른다.
+### 10. `Comment`/`Emotion`은 작성자를 `user` 도메인의 `User`를 그대로 소유한다 — 전용 축약 타입을 만들지 않는다
+- `Comment(id, content, logId, author: User)`, `Emotion(id, content, logId, author: User)` — 처음엔
+  `CommentAuthor(id, nickname, profileImageUrl)`라는 comment 전용 값 객체를 도메인 레코드에 뒀었는데, 이건
+  규칙 8이 응답 DTO에 대해 말하는 것과 같은 이유로 도메인 레벨에서도 **잘못된 중복**이었다 — `user` 도메인의
+  `User`를 그대로 쓰면 되는데 굳이 부분집합 타입을 또 만든 것. 지금은 `CommentMapper`/`EmotionMapper`의
+  `toDomain`이 `UserMapper.toDomain(entity.getAuthor())`로 `User`를 그대로 만들어 넣는다. `Emotion`을 다시
+  만들 때도 이 패턴을 그대로 따랐다 — 전용 축약 타입을 또 만들지 않는다.
+- **전용 축약은 DTO(응답) 단에서만 필요하면 만든다** — 여기서는 그마저도 필요 없다: `CommentResponse.author`/
+  `EmotionResponse.author`는 `user` 도메인의 기존 `UserResponse`를 그대로 쓴다(`UserResponse.from(comment.author())`).
+  `LogResponse.uploader`도 마찬가지로 `UserResponse`를 재사용한다.
+- `CommentJpaEntity.author`/`EmotionJpaEntity.author`가 `FetchType.EAGER`라서 각 `Mapper.toDomain`이 매핑
+  시점에 `User`를 바로 채워 넣을 수 있고, 그래서 응답을 만들 때 유스케이스가 별도로 `UserRepository`를
+  조회할 필요가 없다 — 처음 Chat을 만들 때는 `authorId`만 갖고 다니다가 응답 조립 단계에서
+  `UserRepository.findAllById`로 다시 채워 넣었는데, 그 왕복을 없앤 결정이다.
+- **`CommentResponse`/`EmotionResponse`는 `logId`를 절대 담지 않는다** — 댓글/감정표현은 항상 로그 응답 안
+  (`LogResponse.comments`/`LogResponse.emotions`)처럼 로그 문맥 안에서만 노출되므로, 이미 아는 로그 id를
+  매번 반복해서 돌려주지 않는다. 댓글과 마찬가지로 감정표현도 단독 목록 조회 API는 만들지 않는다 — 로그를
+  조회하면 필드로 같이 오므로 중복이다.
+- **`Log` 도메인 레코드가 자기 댓글/감정표현을 직접 소유한다** (`Log(id, videoUrl, caption, date, hour, uploader,
+  comments: List<Comment>, emotions: List<Emotion>)`) — 응답 조립 전용 별도 컴포넌트(`LogResponseFactory` 같은)를
+  두지 않는다. `LogRepositoryAdapter`(log 도메인의 infra 계층)가 `CommentJpaRepository`/`CommentMapper`,
+  `EmotionJpaRepository`/`EmotionMapper`(각각 comment/emotion 도메인)를 직접 주입받아, `Log`를 만들 때마다
+  둘 다 채워 넣는다. 그래서 `LogResponse.from(log)`는 순수 정적 매핑으로 끝난다(`log.comments()`/`log.emotions()`를
+  그대로 `CommentResponse::from`/`EmotionResponse::from`으로 변환) — `LogCreateCase`/`LogGetUseCase`/
+  `LogListUseCase`/`LogUpdateUseCase`는 리포지토리 하나(`LogRepository`)만 갖고도 댓글·감정표현까지 채워진
+  응답을 만든다. 도메인 레코드가 다른 도메인 레코드(`Comment`, `Emotion`)를 직접 참조하는 것도, infra 계층이
+  다른 도메인의 JPA 리포지토리를 직접 참조하는 것도 허용된 이동이다.
+- **로그를 지울 땐 그 로그의 댓글·감정표현부터 지운다** — `comments.log_id`/`emotions.log_id` FK에
+  `ON DELETE CASCADE`가 없어서, 자식 행이 하나라도 달린 로그를 그냥 `logs.deleteById(id)`만 호출하면
+  Hibernate가 flush 시점에 `TransientPropertyValueException`을 던지며 500이 난다(실제로 겪은 사고).
+  `LogRepositoryAdapter.deleteById`가 `CommentJpaRepository.deleteByLog_Id(id)`와
+  `EmotionJpaRepository.deleteByLog_Id(id)`로 자식부터 지운 다음 `logs.deleteById(id)`를 부른다.
+- `Emotion`은 한 유저가 같은 로그에 감정표현을 두 번 남길 수 없다 — `EmotionJpaEntity`에 `(log_id, user_id)`
+  유니크 제약을 걸고, `EmotionCreateUseCase`가 저장 전에 `existsByLogIdAndAuthorId`로 먼저 확인해 409로
+  거부한다.
+- **JPA 엔티티/DTO 필드명은 도메인 레코드 필드명과 그대로 맞춘다** — 예전엔 `LogJpaEntity`가 관계 필드를
+  `user`라 부르고 도메인 `Log.uploader`와 이름이 어긋나 있었는데, `uploader`로 맞췄다(`LogMapper`도 함께 수정).
+  같은 이유로 `Emotion`의 감정표현 값 필드도 원래 `emotionId`였다가 `Comment.content`와 짝을 맞춰 `content`로
+  통일했다(도메인 레코드/`EmotionJpaEntity`/`EmotionCreateRequest`/`EmotionCreateWebRequest`/`EmotionResponse`/
+  `EmotionMapper`/`EmotionCreateUseCase`/예외 메시지/`docs/api-spec.yaml` 전부 동시에 고쳐야 한다).
 
 ## 피해야 할 안티패턴
 
@@ -127,12 +138,16 @@ global/
 - **시크릿/설정 기본값 은닉 금지**: 비어 있으면 반드시 기동 실패.
 - **컨트롤러에서 체크 예외 try/catch 금지**: DTO 변환부/유스케이스로 위임.
 - **인터페이스·DTO에 여러 멤버가 있는 파일을 라인 범위로 수정할 때 기존 멤버를 실수로 지우기 쉽다** — 특히 `save()` 같은 기존 메서드를 새 메서드 추가 편집 중 통째로 날린 사고가 두 번 있었다. 범위 수정 후 반드시 전체 파일을 다시 읽어 확인한다.
-- **API 문서(`docs/api-spec.yaml`)는 자동 생성되지 않는다**: 규칙 9 참고. 현재 남아있는 미구현 초안은 `/users/{userId}/profile`, 스키마 `LogGetListResponse`/`LogGetByHourResponse`/`LogGetByHourListResponse` 뿐이며, `Emotion` 관련 경로(`/video/emotion`)는 곧 구현할 자리표시자다. 문서를 그대로 신뢰하지 말고 실제 컨트롤러 코드를 기준으로 판단한다.
+- **API 문서(`docs/api-spec.yaml`)는 자동 생성되지 않는다**: 규칙 9 참고. 현재 남아있는 미구현 초안은 `/users/{userId}/profile`, 스키마 `LogGetListResponse`/`LogGetByHourResponse`/`LogGetByHourListResponse` 뿐이다. 문서를 그대로 신뢰하지 말고 실제 컨트롤러 코드를 기준으로 판단한다.
 - **유스케이스 이름 그대로 1:1 패키지(`logCreate/`, `logGet/`, `logUpdate/` ...) 만들지 않는다**: `crud`/`auth` 같은 관심사 그룹 아래 flat하게 둔다.
 - **다른 도메인 응답을 요약하려고 도메인별 축약 DTO(`LogUploaderResponse` 같은) 중복 정의 금지**: 소유 도메인의 응답 DTO를 참조한다.
 
 ## 운영/검증 메모
 
-- 로컬 컨테이너: `docker compose --env-file external/env/.env -f external/build/docker-compose.yml up -d --build`. 백엔드 코드를 고치면 반드시 재빌드 후 실제로 컨테이너가 최신 상태인지 확인하고 나서 "적용됨"이라 말한다.
+- 로컬 컨테이너: `docker compose --env-file deploy/env/.env -f deploy/build/docker-compose.yml up -d --build`.
+  백엔드 코드를 고치면 반드시 재빌드 후 실제로 컨테이너가 최신 상태인지 확인하고 나서 "적용됨"이라 말한다.
+  (주의: `deploy/build/docker-compose.yml`의 `dockerfile: ../build/Dockerfile` 경로가 `context`(`../..`) 기준으로
+  잘못 풀려 `--build`가 실패하는 버그가 있었다 — 우회하려면 `docker build -t kolog-be:latest -f deploy/build/Dockerfile .`로
+  직접 이미지를 만든 뒤 `--build` 없이 `up -d`한다.)
 - 동작 검증은 실제 HTTP 스모크 테스트(가입→토큰→호출)로 하고, 만든 임시 계정/로그/업로드 파일은 검증 후 삭제한다.
 - 명시적 요청이 없으면 새 테스트 파일을 만들지 않는다. 회귀 검증이 필요하면 일회성 스크립트나 기존 자동화 테스트 스위트(`./gradlew test`)로 확인한다.

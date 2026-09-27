@@ -49,6 +49,7 @@ public class LogCreateCase {
                     .hour(request.hour())
                     .uploader(user)
                     .comments(List.of())
+                    .emotions(List.of())
                     .build());
             return LogResponse.from(saved);
         } catch (IOException e) {

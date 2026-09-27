@@ -53,6 +53,7 @@ public class LogUpdateUseCase {
                 .hour(log.hour())
                 .uploader(log.uploader())
                 .comments(log.comments())
+                .emotions(log.emotions())
                 .build());
 
         if (previousVideoUrl != null) {

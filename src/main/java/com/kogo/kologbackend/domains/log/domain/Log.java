@@ -1,6 +1,7 @@
 package com.kogo.kologbackend.domains.log.domain;
 
 import com.kogo.kologbackend.domains.comment.domain.Comment;
+import com.kogo.kologbackend.domains.emotion.domain.Emotion;
 import com.kogo.kologbackend.domains.user.domain.User;
 import lombok.Builder;
 
@@ -15,5 +16,6 @@ public record Log(
         LocalDate date,
         Integer hour,
         User uploader,
-        List<Comment> comments
+        List<Comment> comments,
+        List<Emotion> emotions
 ) {}
