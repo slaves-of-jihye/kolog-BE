@@ -15,10 +15,6 @@ public class UserGetUseCase {
     public UserResponse get(Long userId) {
         User user = repository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
-        return UserResponse.builder()
-                .id(user.id())
-                .nickname(user.nickname())
-                .profileImageUrl(user.profileImageUrl())
-                .build();
+        return UserResponse.from(user);
     }
 }

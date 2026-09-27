@@ -125,7 +125,6 @@ public class VideoFileStorage implements LogFileStorage {
                     try {
                         Files.deleteIfExists(target);
                     } catch (IOException ignored) {
-                        // The database rollback is already complete.
                     }
                 }
             }
@@ -160,7 +159,6 @@ public class VideoFileStorage implements LogFileStorage {
         try {
             Files.deleteIfExists(target);
         } catch (IOException ignored) {
-            // Filesystem cleanup failure must not affect an already-committed database update.
         }
     }
 }

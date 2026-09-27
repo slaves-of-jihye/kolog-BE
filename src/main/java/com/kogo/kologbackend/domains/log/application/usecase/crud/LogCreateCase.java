@@ -18,6 +18,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +42,14 @@ public class LogCreateCase {
 
             String mediaType = videoValidator.detectSupportedMediaType(video);
             String videoUrl = files.storeVideo(video, mediaType);
-            Log saved = logRepository.save(new Log(null, videoUrl, request.caption(), date, request.hour(), user));
+            Log saved = logRepository.save(Log.builder()
+                    .videoUrl(videoUrl)
+                    .caption(request.caption())
+                    .date(date)
+                    .hour(request.hour())
+                    .uploader(user)
+                    .comments(List.of())
+                    .build());
             return LogResponse.from(saved);
         } catch (IOException e) {
             throw new VideoUploadException("Failed to read or close the uploaded video.", e);

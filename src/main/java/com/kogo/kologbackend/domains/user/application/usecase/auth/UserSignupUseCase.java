@@ -24,13 +24,11 @@ public class UserSignupUseCase {
             throw new DuplicateEmailException(request.email());
         }
 
-        User user = new User(
-                null,
-                request.email(),
-                passwordEncoder.encode(request.password()),
-                request.nickname(),
-                null
-        );
+        User user = User.builder()
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .nickname(request.nickname())
+                .build();
         User saved = repository.save(user);
 
         UserDetail accessToken = UserDetail.builder().userId(saved.id()).build();

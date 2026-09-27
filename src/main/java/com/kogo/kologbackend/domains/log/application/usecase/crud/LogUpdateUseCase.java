@@ -45,7 +45,15 @@ public class LogUpdateUseCase {
             }
         }
 
-        Log updated = logRepository.save(new Log(log.id(), videoUrl, caption, log.date(), log.hour(), log.uploader()));
+        Log updated = logRepository.save(Log.builder()
+                .id(log.id())
+                .videoUrl(videoUrl)
+                .caption(caption)
+                .date(log.date())
+                .hour(log.hour())
+                .uploader(log.uploader())
+                .comments(log.comments())
+                .build());
 
         if (previousVideoUrl != null) {
             files.deleteVideo(previousVideoUrl);

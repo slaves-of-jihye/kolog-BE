@@ -16,10 +16,6 @@ public class UserMeUseCase {
     public UserResponse me(UserDetail userDetail) {
         User user = repository.findById(userDetail.userId())
                 .orElseThrow(UserNotFoundException::new);
-        return UserResponse.builder()
-                .id(user.id())
-                .nickname(user.nickname())
-                .profileImageUrl(user.profileImageUrl())
-                .build();
+        return UserResponse.from(user);
     }
 }

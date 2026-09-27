@@ -16,12 +16,12 @@ public final class UserMapper {
     }
 
     public static User toDomain(UserJpaEntity entity) {
-        return new User(
-                entity.getId(),
-                entity.getEmail(),
-                entity.getPassword(),
-                entity.getNickname(),
-                entity.getProfileImageUrl()
-        );
+        return User.builder()
+                .id(entity.getId())
+                .email(entity.getEmail())
+                .password(entity.getPassword())
+                .nickname(entity.getNickname())
+                .profileImageUrl(entity.getProfileImageUrl())
+                .build();
     }
 }
