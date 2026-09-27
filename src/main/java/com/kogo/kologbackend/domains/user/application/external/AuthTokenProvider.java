@@ -7,4 +7,5 @@ public interface AuthTokenProvider {
     String createAccessToken(UserDetail token);
     String createRefreshToken(RefreshToken token);
     UserDetail accessTokenUserDetail(String jwt);
+    UserDetail refreshTokenUserDetail(String jwt);
 }

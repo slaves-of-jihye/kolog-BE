@@ -83,6 +83,19 @@ public class JwtAuthTokenProvider implements AuthTokenProvider {
                 .build();
     }
 
+    @Override
+    public UserDetail refreshTokenUserDetail(String jwt) {
+        Claims claims = Jwts.parser()
+                .verifyWith(refreshSigningKey)
+                .build()
+                .parseSignedClaims(jwt)
+                .getPayload();
+
+        return UserDetail.builder()
+                .userId(Long.valueOf(claims.getSubject()))
+                .build();
+    }
+
 
     private SecretKey createSecretKey(String secret) {
         if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {

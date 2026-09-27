@@ -129,11 +129,13 @@ global/
   통일했다(도메인 레코드/`EmotionJpaEntity`/`EmotionCreateRequest`/`EmotionCreateWebRequest`/`EmotionResponse`/
   `EmotionMapper`/`EmotionCreateUseCase`/예외 메시지/`docs/api-spec.yaml` 전부 동시에 고쳐야 한다).
 
-### 11. 인증은 화이트리스트 방식 — signup/login만 예외, 나머지는 전부 `authenticated()`
+### 11. 인증은 화이트리스트 방식 — signup/login/refresh만 예외, 나머지는 전부 `authenticated()`
 - `SecurityConfig.authorizeHttpRequests`는 엔드포인트를 하나씩 나열해 `authenticated()`를 붙이지 않는다.
-  `POST /api/v1/users/signup`, `POST /api/v1/users/login`만 `permitAll()`이고 나머지는
-  `anyRequest().authenticated()`다. 새 컨트롤러/엔드포인트를 추가해도 `SecurityConfig`를 따로 안 건드려야
-  기본적으로 인증이 걸린다 — 공개 API가 필요하면 signup/login 옆에 명시적으로 추가한다.
+  `POST /api/v1/users/signup`, `POST /api/v1/users/login`, `POST /api/v1/users/refresh`만 `permitAll()`이고
+  나머지는 `anyRequest().authenticated()`다. `refresh`가 여기 껴 있는 이유: `BearerTokenFilter`는 액세스
+  토큰만 이해하므로, 액세스 토큰이 만료돼 재발급받으러 온 요청에 `authenticated()`를 걸면 애초에 재발급이
+  불가능해진다. 새 컨트롤러/엔드포인트를 추가해도 `SecurityConfig`를 따로 안 건드려야 기본적으로 인증이
+  걸린다 — 공개 API가 필요하면 이 셋 옆에 명시적으로 추가한다.
 - CORS 허용 origin은 `APP_CORS_ALLOWED_ORIGINS` 환경변수(`app.cors.allowed-origins` 프로퍼티)로 설정한다.
   콤마로 여러 개 지정 가능(`http://localhost:3000,https://kolog.example.com`), `SecurityConfig`의
   `parseAllowedOrigins`가 트림·공백 제거 후 `setAllowedOriginPatterns`에 넣는다. 하드코딩된 `"*"` 패턴을
@@ -143,6 +145,17 @@ global/
   (`@PostConstruct`)가 `IllegalStateException`을 던져 기동을 막는다 — JWT 시크릿 검증과 같은 이유
   (규칙 "시크릿/설정 기본값 은닉 금지"): 빈 CORS 설정을 조용히 통과시키면 모든 브라우저 크로스오리진
   요청이 이유 없이 403으로 막히는 걸 배포 후에나 알게 된다.
+
+### 12. 리프레시 토큰으로 액세스 토큰만 재발급한다 — 리프레시 토큰은 재발급하지 않는다(로테이션 없음)
+- `AuthTokenProvider.refreshTokenUserDetail(jwt)`가 `accessTokenUserDetail`과 대칭으로 존재한다 — 같은
+  파싱 로직인데 서명 검증에 `accessSigningKey` 대신 `refreshSigningKey`를 쓴다는 것만 다르다.
+- `UserRefreshUseCase`가 리프레시 토큰 파싱 실패(서명 불일치/만료/형식 오류 — `JwtException`/
+  `IllegalArgumentException`)와 "토큰은 유효한데 그 유저가 이제 없음"을 구분하지 않고 둘 다
+  `InvalidRefreshTokenException`(401)으로 합친다 — `UserLoginUseCase`가 "이메일 없음"과 "비밀번호 틀림"을
+  구분 없이 `InvalidCredentialsException`으로 합치는 것과 같은 이유(실패 사유를 세분화해서 알려주지 않는다).
+- 응답은 `UserRefreshResponse(accessToken)` 하나뿐이다 — 리프레시 토큰 로테이션(재발급 시 리프레시 토큰도
+  같이 새로 발급)은 하지 않는다. 요청받은 범위(액세스 토큰 재발급)를 벗어나는 별도 결정이라 필요해지면
+  그때 다시 설계한다.
 
 ## 피해야 할 안티패턴
 

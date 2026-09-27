@@ -58,6 +58,29 @@ paths:
 
         "401":
           description: 이메일 또는 비밀번호 오류
+  /users/refresh:
+    post:
+      tags: [User]
+      summary: 액세스 토큰 재발급
+      description: >
+        리프레시 토큰 검증(서명/만료 확인, 실패 시 401) → 토큰의 유저가 아직 존재하는지 확인(없으면 401) →
+        새 액세스 토큰 발급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRefreshRequest'
+      responses:
+        "200":
+          description: 재발급 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRefreshResponse'
+        "401":
+          description: 리프레시 토큰이 유효하지 않거나(서명/만료) 토큰의 유저가 더 이상 존재하지 않음
+
   /users/me:
     get:
       tags: [User]
@@ -433,6 +456,18 @@ components:
         accessToken:
           type: string
         refreshToken:
+          type: string
+
+    UserRefreshRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+
+    UserRefreshResponse:
+      type: object
+      properties:
+        accessToken:
           type: string
 
     UserMeResponse:
