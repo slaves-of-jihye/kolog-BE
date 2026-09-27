@@ -106,6 +106,42 @@ paths:
           description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
         "404":
           description: 토큰의 사용자를 찾을 수 없음
+    patch:
+      tags: [User]
+      summary: 내 프로필 수정 (닉네임/프로필 이미지)
+      description: >
+        nickname 또는 profileImage 중 하나는 있어야 함(둘 다 없으면 400) →
+        닉네임 변경 시 중복 확인(중복이면 409) → 프로필 이미지 첨부 시 형식 검증(지원하지 않으면 400) 후
+        저장, 기존 이미지 파일은 커밋 후 삭제
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                profileImage:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMeResponse'
+        "400":
+          description: nickname과 profileImage 둘 다 없음, 또는 지원하지 않는 이미지 형식
+        "401":
+          description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
+        "404":
+          description: 토큰의 사용자를 찾을 수 없음
+        "409":
+          description: 이미 존재하는 닉네임
+        "500":
+          description: 업로드 이미지 스트림 읽기 중 서버 I/O 오류
 
   /users/{userId}:
     get:
@@ -130,62 +166,6 @@ paths:
           description: 인증이 필요하거나 액세스 토큰이 유효하지 않음
         "404":
           description: 사용자를 찾을 수 없음
-
-  /users/{userId}/profile:
-    get:
-      tags: [User]
-      summary: 프로필 조회
-      description: userId(path)로 유저 조회 → 프로필(닉네임/이미지) + 이메일 조합해 반환
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "200":
-          description: 프로필 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfileResponse'
-
-    patch:
-      tags: [User]
-      summary: 프로필 수정
-      description: >
-        닉네임 변경 시 중복 확인 후 갱신, 프로필 이미지 첨부 시 파일 저장 후 기존 파일 삭제 →
-        갱신된 프로필 + 이메일 반환
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: nickname
-          in: query
-          required: false
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                profileImage:
-                  type: string
-                  format: binary
-      responses:
-        "200":
-          description: 프로필 수정 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfileResponse'
 
   /logs:
     get:
@@ -481,20 +461,6 @@ components:
         profileImageUrl:
           type: string
           nullable: true
-
-    UserProfileResponse:
-      type: object
-      properties:
-        userId:
-          type: integer
-          format: int64
-        nickname:
-          type: string
-        profileImage:
-          type: string
-          nullable: true
-        email:
-          type: string
 
     LogResponse:
       type: object

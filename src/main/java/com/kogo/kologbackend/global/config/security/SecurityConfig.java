@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/refresh").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/resources/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(

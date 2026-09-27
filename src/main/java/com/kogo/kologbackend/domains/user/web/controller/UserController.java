@@ -7,11 +7,13 @@ import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.U
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response.UserAuthResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response.UserRefreshResponse;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.UserGetUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.UserProfileUpdateUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.UserMeUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.crud.dto.UserResponse;
 import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserRefreshUseCase;
 import com.kogo.kologbackend.domains.user.application.usecase.auth.UserSignupUseCase;
+import com.kogo.kologbackend.domains.user.web.controller.dto.UserProfileUpdateWebRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ public class UserController {
     private final UserRefreshUseCase userRefreshUseCase;
     private final UserMeUseCase userMeUseCase;
     private final UserGetUseCase userGetUseCase;
+    private final UserProfileUpdateUseCase userProfileUpdateUseCase;
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
@@ -49,6 +52,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public UserResponse me(@AuthenticationPrincipal UserDetail userDetail) {
         return userMeUseCase.me(userDetail);
+    }
+
+    @PatchMapping(value = "/me", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse updateMe(@AuthenticationPrincipal UserDetail userDetail,
+                                  @ModelAttribute UserProfileUpdateWebRequest request) {
+        return userProfileUpdateUseCase.update(request.toApplication(userDetail));
     }
 
     @GetMapping("/{userId}")

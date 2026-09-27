@@ -3,49 +3,23 @@ package com.kogo.kologbackend.domains.log.infrastructure.adapter;
 import com.kogo.kologbackend.domains.log.application.exception.InvalidVideoException;
 import com.kogo.kologbackend.domains.log.application.exception.VideoUploadException;
 import com.kogo.kologbackend.domains.log.application.external.LogFileStorage;
+import com.kogo.kologbackend.global.storage.LocalFileStorageSupport;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class VideoFileStorage implements LogFileStorage {
-    private final Path directory;
-    private final String serverUrl;
+    private final LocalFileStorageSupport storage;
 
     public VideoFileStorage(@Value("${file.upload-dir}") String directory,
                             @Value("${file.server-url}") String serverUrl) {
-        if (directory == null || directory.isBlank()) {
-            throw new IllegalArgumentException("file.upload-dir must be a writable directory.");
-        }
-        this.directory = Path.of(directory).toAbsolutePath().normalize();
-        try {
-            Files.createDirectories(this.directory);
-        } catch (IOException e) {
-            throw new UncheckedIOException("file.upload-dir cannot be created.", e);
-        }
-        if (!Files.isDirectory(this.directory) || !Files.isWritable(this.directory)) {
-            throw new IllegalArgumentException("file.upload-dir must be a writable directory.");
-        }
-        if (serverUrl == null || serverUrl.isBlank()) {
-            throw new IllegalArgumentException("file.server-url must be an HTTP URL.");
-        }
-        URI url = URI.create(serverUrl.trim());
-        if (!("http".equalsIgnoreCase(url.getScheme()) || "https".equalsIgnoreCase(url.getScheme()))
-                || url.getHost() == null || url.getHost().isBlank()
-                || url.getRawQuery() != null || url.getRawFragment() != null) {
-            throw new IllegalArgumentException("file.server-url must be an HTTP URL.");
-        }
-        this.serverUrl = url.toString().replaceAll("/+$", "");
+        this.storage = new LocalFileStorageSupport(directory, serverUrl, "videos");
     }
 
     @Override
@@ -55,14 +29,11 @@ public class VideoFileStorage implements LogFileStorage {
             case "video/webm" -> ".webm";
             default -> throw new InvalidVideoException("Unsupported video format: " + mediaType);
         };
-        if (!TransactionSynchronizationManager.isActualTransactionActive()
-                || !TransactionSynchronizationManager.isSynchronizationActive()) {
-            throw new IllegalStateException("Video storage requires an active transaction.");
-        }
-
-        Path source = null;
-        Path target = directory.resolve(UUID.randomUUID() + ".mp4");
+        storage.requireActiveTransaction();
+        Path directory = storage.directory();
+        Path target = storage.allocateTarget(".mp4");
         boolean stored = false;
+        Path source = null;
         Throwable failure = null;
         Process process = null;
         try {
@@ -118,47 +89,12 @@ public class VideoFileStorage implements LogFileStorage {
             }
         }
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                if (status == STATUS_ROLLED_BACK) {
-                    try {
-                        Files.deleteIfExists(target);
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-        });
-        return serverUrl + "/resources/" + target.getFileName();
+        storage.deleteOnRollback(target);
+        return storage.toPublicUrl(target);
     }
 
     @Override
     public void deleteVideo(String videoUrl) {
-        String prefix = serverUrl + "/resources/";
-        if (videoUrl == null || !videoUrl.startsWith(prefix)) {
-            return;
-        }
-        String filename = videoUrl.substring(prefix.length());
-        Path target = directory.resolve(filename).normalize();
-        if (!directory.equals(target.getParent()) || !target.getFileName().toString().equals(filename)) {
-            return;
-        }
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    deleteQuietly(target);
-                }
-            });
-        } else {
-            deleteQuietly(target);
-        }
-    }
-
-    private void deleteQuietly(Path target) {
-        try {
-            Files.deleteIfExists(target);
-        } catch (IOException ignored) {
-        }
+        storage.resolvePublicUrl(videoUrl).ifPresent(storage::deleteAfterCommit);
     }
 }

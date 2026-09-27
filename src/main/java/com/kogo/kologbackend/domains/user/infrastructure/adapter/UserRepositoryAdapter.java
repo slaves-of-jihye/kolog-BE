@@ -27,6 +27,11 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
+    public boolean existsByNickname(String nickname) {
+        return repository.existsByNickname(nickname);
+    }
+
+    @Override
     public Optional<User> findByEmail(String email) {
         return repository.findByEmail(email).map(UserMapper::toDomain);
     }

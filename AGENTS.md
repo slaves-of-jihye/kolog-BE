@@ -29,6 +29,7 @@ global/
   config/
     web/                     WebMvcConfigurer 등 전역 웹 설정 (정적 리소스 서빙 등)
     security/                SecurityConfig + filter/ (BearerTokenFilter). 컨트롤러 진입 전 인증 실패는 여기서만 처리
+  storage/                   도메인 무관 공용 파일 저장 헬퍼 (LocalFileStorageSupport). 도메인별 어댑터가 구성해서 씀
 ```
 
 > 과거에는 `usecase/logCreate/`, `usecase/logGet/`, `usecase/logList/`처럼 **유스케이스 하나당 패키지 하나**였다.
@@ -129,13 +130,19 @@ global/
   통일했다(도메인 레코드/`EmotionJpaEntity`/`EmotionCreateRequest`/`EmotionCreateWebRequest`/`EmotionResponse`/
   `EmotionMapper`/`EmotionCreateUseCase`/예외 메시지/`docs/api-spec.yaml` 전부 동시에 고쳐야 한다).
 
-### 11. 인증은 화이트리스트 방식 — signup/login/refresh만 예외, 나머지는 전부 `authenticated()`
+### 11. 인증은 화이트리스트 방식 — signup/login/refresh + 정적 리소스만 예외, 나머지는 전부 `authenticated()`
 - `SecurityConfig.authorizeHttpRequests`는 엔드포인트를 하나씩 나열해 `authenticated()`를 붙이지 않는다.
-  `POST /api/v1/users/signup`, `POST /api/v1/users/login`, `POST /api/v1/users/refresh`만 `permitAll()`이고
-  나머지는 `anyRequest().authenticated()`다. `refresh`가 여기 껴 있는 이유: `BearerTokenFilter`는 액세스
-  토큰만 이해하므로, 액세스 토큰이 만료돼 재발급받으러 온 요청에 `authenticated()`를 걸면 애초에 재발급이
-  불가능해진다. 새 컨트롤러/엔드포인트를 추가해도 `SecurityConfig`를 따로 안 건드려야 기본적으로 인증이
-  걸린다 — 공개 API가 필요하면 이 셋 옆에 명시적으로 추가한다.
+  `POST /api/v1/users/signup`, `POST /api/v1/users/login`, `POST /api/v1/users/refresh`,
+  `GET /resources/**`만 `permitAll()`이고 나머지는 `anyRequest().authenticated()`다. `refresh`가 여기 껴
+  있는 이유: `BearerTokenFilter`는 액세스 토큰만 이해하므로, 액세스 토큰이 만료돼 재발급받으러 온 요청에
+  `authenticated()`를 걸면 애초에 재발급이 불가능해진다. `GET /resources/**`(업로드된 영상/이미지 정적 파일,
+  `ResourcesConfig` 참고)가 여기 껴 있는 이유: 응답 JSON에 담겨 나가는 `videoUrl`/`profileImageUrl`은
+  `<video>`/`<img>` 태그나 별도 다운로드로 인증 헤더 없이 바로 접근되는 게 정상이다 — **이 화이트리스트를
+  처음 도입했을 때(규칙 도입 커밋) 이걸 빠뜨려서 모든 업로드 파일이 401로 막히는 회귀가 있었고, PATCH
+  /users/me의 프로필 이미지 URL을 실제로 fetch해보는 스모크 테스트에서야 발견됐다** — 새 정적/공개 리소스
+  경로를 추가할 때 반드시 인증 없이 실제로 fetch까지 해서 확인한다(JSON 필드에 URL이 들어있다고 끝난 게
+  아니다). 새 컨트롤러/엔드포인트를 추가해도 `SecurityConfig`를 따로 안 건드려야 기본적으로 인증이 걸린다
+  — 공개 API가 필요하면 이 목록 옆에 명시적으로 추가한다.
 - CORS 허용 origin은 `APP_CORS_ALLOWED_ORIGINS` 환경변수(`app.cors.allowed-origins` 프로퍼티)로 설정한다.
   콤마로 여러 개 지정 가능(`http://localhost:3000,https://kolog.example.com`), `SecurityConfig`의
   `parseAllowedOrigins`가 트림·공백 제거 후 `setAllowedOriginPatterns`에 넣는다. 하드코딩된 `"*"` 패턴을
@@ -157,6 +164,25 @@ global/
   같이 새로 발급)은 하지 않는다. 요청받은 범위(액세스 토큰 재발급)를 벗어나는 별도 결정이라 필요해지면
   그때 다시 설계한다.
 
+### 13. 파일 저장은 카테고리별 하위 디렉토리로 분리한다 — video는 `videos/`, 이미지는 `images/`
+- `global/storage/LocalFileStorageSupport`가 디렉토리 생성/검증, `serverUrl` 검증, UUID 파일명 할당,
+  `/resources/{category}/{filename}` 공개 URL 조립·역파싱, 커밋/롤백 시점 파일 삭제 등록을 전담한다 —
+  `file.upload-dir`/`file.server-url`은 그대로 재사용하고 `category`("videos"/"images")만 인자로 받아
+  `{upload-dir}/{category}/`를 만든다. 새 파일 카테고리가 생기면 이 클래스를 새 `category`로 재사용하고,
+  검증/URL 조립 로직을 또 베껴 쓰지 않는다.
+- `LogFileStorage`/`VideoFileStorage`(log 도메인, ffmpeg 트랜스코딩 포함)와 `UserFileStorage`/
+  `ImageFileStorage`(user 도메인, 검증만 하고 그대로 저장)는 각자 도메인의 포트/어댑터로 따로 두고
+  `LocalFileStorageSupport`만 공유한다 — 도메인 경계를 넘는 공통 인터페이스로 합치지 않는다.
+  `global/config/web/ResourcesConfig`의 `/resources/**` 핸들러는 `{upload-dir}` 전체를 그대로 매핑하므로
+  하위 디렉토리가 늘어나도 별도 설정이 필요 없다.
+- `PATCH /api/v1/users/me`(닉네임/프로필 이미지 수정)는 main 브랜치의 `UserProfileUpdateCase`에서 찾은
+  비즈니스 로직(닉네임 변경 시 중복 확인 후 갱신, 이미지 교체 시 저장 후 이전 파일 커밋 후 삭제)을 그대로
+  가져오되, main처럼 `userId` 경로 변수로 아무 유저나 수정 가능하게 열어두지 않는다 — `@AuthenticationPrincipal`
+  로만 본인 것만 수정 가능(경로에 `userId` 없음), `GET /users/me`와 짝을 맞춘 자기 자신 전용 엔드포인트다.
+  `LogUpdateUseCase`/`LogUpdateWebRequest`와 같은 패턴: nickname/profileImage 둘 다 없으면 웹 계층에서
+  `InvalidProfileUpdateException`(400)을 던지고, 이미지 형식 검증은 `UserProfileImageValidator`(Tika 기반,
+  `LogVideoValidator`와 대칭)가 맡는다.
+
 ## 피해야 할 안티패턴
 
 - **공통 HTTP 예외 계층 부활 금지**: `global/exception` 같은 패키지에 상태코드 아는 부모 예외를 다시 만들지 않는다.
@@ -166,7 +192,10 @@ global/
 - **시크릿/설정 기본값 은닉 금지**: 비어 있으면 반드시 기동 실패.
 - **컨트롤러에서 체크 예외 try/catch 금지**: DTO 변환부/유스케이스로 위임.
 - **인터페이스·DTO에 여러 멤버가 있는 파일을 라인 범위로 수정할 때 기존 멤버를 실수로 지우기 쉽다** — 특히 `save()` 같은 기존 메서드를 새 메서드 추가 편집 중 통째로 날린 사고가 두 번 있었다. 범위 수정 후 반드시 전체 파일을 다시 읽어 확인한다.
-- **API 문서(`docs/api-spec.yaml`)는 자동 생성되지 않는다**: 규칙 9 참고. 현재 남아있는 미구현 초안은 `/users/{userId}/profile`, 스키마 `LogGetListResponse`/`LogGetByHourResponse`/`LogGetByHourListResponse` 뿐이다. 문서를 그대로 신뢰하지 말고 실제 컨트롤러 코드를 기준으로 판단한다.
+- **API 문서(`docs/api-spec.yaml`)는 자동 생성되지 않는다**: 규칙 9 참고. 현재 남아있는 미구현 초안은 스키마
+  `LogGetListResponse`/`LogGetByHourResponse`/`LogGetByHourListResponse` 뿐이다(`/users/{userId}/profile`
+  초안은 `PATCH /users/me`로 실제 구현되면서 정리됨). 문서를 그대로 신뢰하지 말고 실제 컨트롤러 코드를
+  기준으로 판단한다.
 - **유스케이스 이름 그대로 1:1 패키지(`logCreate/`, `logGet/`, `logUpdate/` ...) 만들지 않는다**: `crud`/`auth` 같은 관심사 그룹 아래 flat하게 둔다.
 - **다른 도메인 응답을 요약하려고 도메인별 축약 DTO(`LogUploaderResponse` 같은) 중복 정의 금지**: 소유 도메인의 응답 DTO를 참조한다.
 
