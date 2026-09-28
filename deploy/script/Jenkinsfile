@@ -1,0 +1,112 @@
+// kolog-backend 배포 파이프라인.
+//
+// 전제:
+// - 이 Jenkinsfile은 "Pipeline script from SCM"으로 kolog-BE 저장소를 가리키는 Jenkins job에서
+//   실행된다(체크아웃 자체는 Jenkins가 처리, Pull 스테이지는 그 이후 최신 커밋을 한 번 더 명시적으로
+//   맞춰준다).
+// - 빌드 에이전트에 docker / docker compose(v2 플러그인) / bash가 이미 설치돼 있고,
+//   현재 사용자가 docker 데몬에 접근 가능해야 한다.
+// - deploy/env/{.env,db.env,kolog-backend.env}는 저장소에 커밋되지 않는다(.gitignore).
+//   Jenkins Credentials(Secret file 타입)로 등록해두고 Build 스테이지에서 워크스페이스로 복사한다.
+//   아래 3개 credential id를 Jenkins에 미리 등록해야 한다:
+//     - kolog-be-compose-env   -> deploy/env/.env       (docker compose ${VAR} 치환용, 예: APP_PORT)
+//     - kolog-be-db-env        -> deploy/env/db.env     (postgres 컨테이너 env_file)
+//     - kolog-be-app-env       -> deploy/env/kolog-backend.env (app 컨테이너 env_file)
+//
+// 롤백 정책:
+// - Build/Run/Health Check 스테이지 중 하나라도 실패하면 그 스테이지의 post.failure에서
+//   deploy/script/rollback.sh를 실행해, Build 스테이지 시작 시점에 백업해둔 kolog-be:rollback
+//   이미지로 되돌리고 그 이미지로 컨테이너를 다시 올린다.
+// - Pull 스테이지 실패는 롤백 대상이 아니다 — 아직 아무것도 바꾸지 않았으므로 기존에 떠 있는
+//   앱은 그대로 영향받지 않는다.
+
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        COMPOSE_FILE = 'deploy/build/docker-compose.yml'
+        ENV_FILE = 'deploy/env/.env'
+        HEALTH_CHECK_CONTAINER = 'kolog-be-app'
+        HEALTH_CHECK_TIMEOUT_SECONDS = '90'
+    }
+
+    stages {
+        stage('Pull') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'kolog-be-compose-env', variable: 'COMPOSE_ENV_SRC'),
+                    file(credentialsId: 'kolog-be-db-env', variable: 'DB_ENV_SRC'),
+                    file(credentialsId: 'kolog-be-app-env', variable: 'APP_ENV_SRC'),
+                ]) {
+                    sh '''
+                        set -euo pipefail
+
+                        mkdir -p deploy/env
+                        cp "$COMPOSE_ENV_SRC" deploy/env/.env
+                        cp "$DB_ENV_SRC" deploy/env/db.env
+                        cp "$APP_ENV_SRC" deploy/env/kolog-backend.env
+
+                        if docker image inspect kolog-be:latest >/dev/null 2>&1; then
+                            docker tag kolog-be:latest kolog-be:rollback
+                            echo "[build] 이전 이미지를 kolog-be:rollback으로 백업했습니다."
+                        else
+                            echo "[build] 이전에 배포된 이미지가 없어 백업을 건너뜁니다 (최초 배포)."
+                        fi
+
+                        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build kolog-backend
+                    '''
+                }
+            }
+            post {
+                failure {
+                    sh 'bash deploy/script/rollback.sh'
+                }
+            }
+        }
+
+        stage('Run') {
+            steps {
+                sh '''
+                    set -euo pipefail
+                    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
+                '''
+            }
+            post {
+                failure {
+                    sh 'bash deploy/script/rollback.sh'
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh 'bash deploy/script/health-check.sh "$HEALTH_CHECK_CONTAINER" "$HEALTH_CHECK_TIMEOUT_SECONDS"'
+            }
+            post {
+                failure {
+                    sh 'bash deploy/script/rollback.sh'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '[pipeline] 배포 성공: kolog-be-app healthy.'
+        }
+        failure {
+            echo '[pipeline] 배포 파이프라인 실패. 위 rollback 로그를 확인하세요.'
+        }
+    }
+}

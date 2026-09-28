@@ -30,16 +30,10 @@
 
 ## FILE UPLOADS
 
-- Profile images accept JPEG, PNG, and WebP; videos accept MP4 and WebM.
-- Apache Tika inspects file content, not client filenames or Content-Type headers.
-  Stored filenames use a new UUID and the detected extension. Detection does not
-  guarantee complete decoding or malware-free content.
-- Files are stored under `FILE_SYSTEM_PATH`; URLs use `APP_URL/resources/`.
-- Database rollback removes new uploads. Profile replacement and log deletion
-  remove the previous file only after a successful database commit.
-- Automatic deletion only accepts UUID filenames under the configured resource
-  URL and storage root. External URLs and URLs from a previous `APP_URL` are skipped.
-- Filesystem cleanup failures are logged without undoing committed database work.
-  Process crashes can still leave orphan files; no durable cleanup queue is provided.
-- Existing orphan files and previously uploaded unsupported content are not migrated
-  or removed automatically.
+- Video uploads accept MP4 and WebM input; new files are transcoded with FFmpeg
+  to silent H.264 (`yuv420p`) MP4. Existing uploads are not migrated.
+- Files are stored under `FILE_UPLOAD_DIR`; URLs use `FILE_SERVER_URL/resources/`.
+- `FILE_UPLOAD_DIR`, `FILE_SERVER_URL`, and both JWT secrets are required at
+  startup. Invalid storage settings or JWT secrets prevent startup.
+- A database rollback removes its new video file. A process crash can still
+  leave orphan files; no durable cleanup queue is provided.

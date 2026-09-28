@@ -1,0 +1,69 @@
+package com.kogo.kologbackend.domains.user.web.controller;
+
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.UserLoginRequest;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.UserLoginUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.UserRefreshRequest;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.request.UserSignupRequest;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response.UserAuthResponse;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.dto.response.UserRefreshResponse;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.UserGetUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.UserProfileUpdateUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.UserMeUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.crud.dto.UserResponse;
+import com.kogo.kologbackend.domains.user.application.external.dto.UserDetail;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.UserRefreshUseCase;
+import com.kogo.kologbackend.domains.user.application.usecase.auth.UserSignupUseCase;
+import com.kogo.kologbackend.domains.user.web.controller.dto.UserProfileUpdateWebRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/users")
+public class UserController {
+    private final UserSignupUseCase userSignupUseCase;
+    private final UserLoginUseCase userLoginUseCase;
+    private final UserRefreshUseCase userRefreshUseCase;
+    private final UserMeUseCase userMeUseCase;
+    private final UserGetUseCase userGetUseCase;
+    private final UserProfileUpdateUseCase userProfileUpdateUseCase;
+
+    @PostMapping("/signup")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserAuthResponse signup(@RequestBody UserSignupRequest request) {
+        return userSignupUseCase.signup(request);
+    }
+
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
+    public UserAuthResponse login(@RequestBody UserLoginRequest request) {
+        return userLoginUseCase.login(request);
+    }
+
+    @PostMapping("/refresh")
+    @ResponseStatus(HttpStatus.OK)
+    public UserRefreshResponse refresh(@RequestBody UserRefreshRequest request) {
+        return userRefreshUseCase.refresh(request);
+    }
+
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse me(@AuthenticationPrincipal UserDetail userDetail) {
+        return userMeUseCase.me(userDetail);
+    }
+
+    @PatchMapping(value = "/me", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse updateMe(@AuthenticationPrincipal UserDetail userDetail,
+                                  @ModelAttribute UserProfileUpdateWebRequest request) {
+        return userProfileUpdateUseCase.update(request.toApplication(userDetail));
+    }
+
+    @GetMapping("/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponse get(@PathVariable Long userId) {
+        return userGetUseCase.get(userId);
+    }
+}
