@@ -170,9 +170,16 @@ global/
   `file.upload-dir`/`file.server-url`은 그대로 재사용하고 `category`("videos"/"images")만 인자로 받아
   `{upload-dir}/{category}/`를 만든다. 새 파일 카테고리가 생기면 이 클래스를 새 `category`로 재사용하고,
   검증/URL 조립 로직을 또 베껴 쓰지 않는다.
-- `LogFileStorage`/`VideoFileStorage`(log 도메인, ffmpeg 트랜스코딩 포함)와 `UserFileStorage`/
-  `ImageFileStorage`(user 도메인, 검증만 하고 그대로 저장)는 각자 도메인의 포트/어댑터로 따로 두고
-  `LocalFileStorageSupport`만 공유한다 — 도메인 경계를 넘는 공통 인터페이스로 합치지 않는다.
+- `LogFileStorage`/`VideoFileStorage`(log 도메인)와 `UserFileStorage`/`ImageFileStorage`(user 도메인)는
+  각자 도메인의 포트/어댑터로 따로 두고 `LocalFileStorageSupport`만 공유한다 — 도메인 경계를 넘는 공통
+  인터페이스로 합치지 않는다. 둘 다 ffmpeg로 트랜스코딩해서 저장 포맷을 하나로 통일한다(video는 항상
+  `.mp4`/H.264, image는 항상 `.jpg`/MJPEG — 업로드 형식이 jpeg/png/webp/gif 무엇이든 `ImageFileStorage`가
+  `ffmpeg -vframes 1 -f image2 -c:v mjpeg -q:v 3`로 변환 후 저장한다. 처음엔 PNG로 통일했다가 파일 용량이
+  너무 커서 JPEG로 바꿨다 — 프로필 사진은 투명 배경이 필요 없는 사진이 대부분이라 손실 압축의 트레이드오프가
+  괜찮다는 판단). `Tika` 검증(`LogVideoValidator`/`UserProfileImageValidator`)은 어떤 입력 형식을
+  **받아들일지**만 정하고, 실제 저장 포맷은 항상 고정이다
+  — DB/URL에 `videoUrl`/`profileImageUrl` 하나의 확장자 규칙만 있으면 되고, 클라이언트가 나중에 재생/
+  렌더링할 때 여러 포맷을 신경 쓸 필요가 없다.
   `global/config/web/ResourcesConfig`의 `/resources/**` 핸들러는 `{upload-dir}` 전체를 그대로 매핑하므로
   하위 디렉토리가 늘어나도 별도 설정이 필요 없다.
 - `PATCH /api/v1/users/me`(닉네임/프로필 이미지 수정)는 main 브랜치의 `UserProfileUpdateCase`에서 찾은

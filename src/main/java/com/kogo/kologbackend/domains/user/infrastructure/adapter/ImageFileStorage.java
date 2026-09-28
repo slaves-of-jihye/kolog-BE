@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class ImageFileStorage implements UserFileStorage {
@@ -24,7 +24,7 @@ public class ImageFileStorage implements UserFileStorage {
 
     @Override
     public String storeImage(InputStream stream, String mediaType) {
-        String extension = switch (mediaType) {
+        String sourceExtension = switch (mediaType) {
             case "image/jpeg" -> ".jpg";
             case "image/png" -> ".png";
             case "image/webp" -> ".webp";
@@ -32,12 +32,65 @@ public class ImageFileStorage implements UserFileStorage {
             default -> throw new InvalidProfileImageException("Unsupported image format: " + mediaType);
         };
         storage.requireActiveTransaction();
-        Path target = storage.allocateTarget(extension);
+        Path directory = storage.directory();
+        Path target = storage.allocateTarget(".jpg");
+        boolean stored = false;
+        Path source = null;
+        Throwable failure = null;
+        Process process = null;
         try {
-            Files.copy(stream, target, StandardCopyOption.REPLACE_EXISTING);
+            source = Files.createTempFile(directory, "incoming-", sourceExtension);
+            Files.copy(stream, source, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            process = new ProcessBuilder("ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin",
+                    "-i", source.toString(), "-vframes", "1", "-f", "image2", "-c:v", "mjpeg", "-q:v", "3",
+                    target.toString())
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
+                    .start();
+            if (!process.waitFor(30, TimeUnit.SECONDS)) {
+                process.destroyForcibly();
+                process.waitFor();
+                throw new ProfileImageUploadException("Image conversion timed out.");
+            }
+            if (process.exitValue() != 0 || !Files.isRegularFile(target) || Files.size(target) == 0) {
+                throw new InvalidProfileImageException("The uploaded image cannot be converted.");
+            }
+            stored = true;
         } catch (IOException e) {
-            throw new ProfileImageUploadException("Failed to store image.", e);
+            ProfileImageUploadException uploadFailure = new ProfileImageUploadException("Failed to store image.", e);
+            failure = uploadFailure;
+            throw uploadFailure;
+        } catch (InterruptedException e) {
+            if (process != null && process.isAlive()) process.destroyForcibly().onExit().join();
+            Thread.currentThread().interrupt();
+            ProfileImageUploadException uploadFailure =
+                    new ProfileImageUploadException("Image conversion interrupted.", e);
+            failure = uploadFailure;
+            throw uploadFailure;
+        } catch (RuntimeException | Error e) {
+            failure = e;
+            throw e;
+        } finally {
+            IOException cleanupFailure = null;
+            try {
+                if (source != null) Files.deleteIfExists(source);
+            } catch (IOException e) {
+                cleanupFailure = e;
+            }
+            if (!stored || cleanupFailure != null) {
+                try {
+                    Files.deleteIfExists(target);
+                } catch (IOException e) {
+                    if (cleanupFailure == null) cleanupFailure = e;
+                    else cleanupFailure.addSuppressed(e);
+                }
+            }
+            if (cleanupFailure != null) {
+                if (failure != null) failure.addSuppressed(cleanupFailure);
+                else throw new ProfileImageUploadException("Failed to clean up image.", cleanupFailure);
+            }
         }
+
         storage.deleteOnRollback(target);
         return storage.toPublicUrl(target);
     }
